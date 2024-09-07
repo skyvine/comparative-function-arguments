@@ -1,0 +1,39 @@
+\documentclass[twocolumn]{article}
+
+\usepackage{biblatex}
+\addbibresource{ref.bib}
+
+\usepackage[utf8x]{inputenc}
+
+\usepackage{pygmentex}
+\setpygmented{tabsize=4,sty=lovelace}
+
+\usepackage{tabularx}
+
+\usepackage{fancyhdr}
+%\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+\fancyhead[C]{PARTIAL ROUGH ROUGH DRAFT}
+
+\begin{document}
+\textbf{Preface}:
+\input{rough-rough-preface.tex}
+\newpage
+
+\title{Comparative Function Arguments}
+\author{Skyler Ferris}
+\date{}
+\maketitle
+
+\input{00-introduction.tex}
+\newpage
+\part{Assessment}
+\input{19-assessment-introduction.tex}
+\input{20-state-of-python.tex}
+\newpage
+\part{Action}
+\newpage
+
+\printbibliography
+
+\end{document}

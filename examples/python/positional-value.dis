@@ -1,0 +1,67 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object add_values at 0x7feabee3b360, file "positional-value.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (add_values)
+
+  4           8 LOAD_CONST               1 (<code object add_values_positional at 0x7feabee3b430, file "positional-value.py", line 4>)
+             10 MAKE_FUNCTION            0
+             12 STORE_NAME               1 (add_values_positional)
+
+  7          14 LOAD_CONST               2 (<code object add_values_mixed at 0x7feabee3b500, file "positional-value.py", line 7>)
+             16 MAKE_FUNCTION            0
+             18 STORE_NAME               2 (add_values_mixed)
+
+ 10          20 PUSH_NULL
+             22 LOAD_NAME                0 (add_values)
+             24 LOAD_CONST               3 (1000)
+             26 LOAD_CONST               4 (1001)
+             28 CALL                     2
+             36 POP_TOP
+
+ 11          38 PUSH_NULL
+             40 LOAD_NAME                1 (add_values_positional)
+             42 LOAD_CONST               3 (1000)
+             44 LOAD_CONST               4 (1001)
+             46 CALL                     2
+             54 POP_TOP
+
+ 12          56 PUSH_NULL
+             58 LOAD_NAME                2 (add_values_mixed)
+             60 LOAD_CONST               3 (1000)
+             62 LOAD_CONST               4 (1001)
+             64 CALL                     2
+             72 POP_TOP
+
+ 13          74 PUSH_NULL
+             76 LOAD_NAME                2 (add_values_mixed)
+             78 LOAD_CONST               3 (1000)
+             80 LOAD_CONST               4 (1001)
+             82 KW_NAMES                 5 (('b',))
+             84 CALL                     2
+             92 POP_TOP
+             94 RETURN_CONST             6 (None)
+
+Disassembly of <code object add_values at 0x7feabee3b360, file "positional-value.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (positional)
+              4 LOAD_FAST                1 (named_or_positional)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE
+
+Disassembly of <code object add_values_positional at 0x7feabee3b430, file "positional-value.py", line 4>:
+  4           0 RESUME                   0
+
+  5           2 LOAD_FAST                0 (positional)
+              4 LOAD_FAST                1 (named_or_positional)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE
+
+Disassembly of <code object add_values_mixed at 0x7feabee3b500, file "positional-value.py", line 7>:
+  7           0 RESUME                   0
+
+  8           2 LOAD_FAST                0 (positional)
+              4 LOAD_FAST                1 (named_or_positional)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE

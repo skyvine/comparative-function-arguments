@@ -1,0 +1,67 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object normal_params at 0x7f783e031290, file "calls.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (normal_params)
+
+  7           8 LOAD_CONST               1 (<code object all_positional at 0x7f783e031370, file "calls.py", line 7>)
+             10 MAKE_FUNCTION            0
+             12 STORE_NAME               1 (all_positional)
+
+ 10          14 LOAD_CONST               2 (<code object all_keyword at 0x7f783e0311b0, file "calls.py", line 10>)
+             16 MAKE_FUNCTION            0
+             18 STORE_NAME               2 (all_keyword)
+
+ 13          20 LOAD_CONST               3 (<code object mixed at 0x7f783e031530, file "calls.py", line 13>)
+             22 MAKE_FUNCTION            0
+             24 STORE_NAME               3 (mixed)
+             26 RETURN_CONST             4 (None)
+
+Disassembly of <code object normal_params at 0x7f783e031290, file "calls.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (one)
+              4 POP_JUMP_IF_FALSE        3 (to 12)
+
+  3           6 LOAD_FAST                1 (two)
+              8 POP_TOP
+             10 RETURN_CONST             0 (None)
+
+  5     >>   12 LOAD_FAST                2 (three)
+             14 POP_TOP
+             16 RETURN_CONST             0 (None)
+
+Disassembly of <code object all_positional at 0x7f783e031370, file "calls.py", line 7>:
+  7           0 RESUME                   0
+
+  8           2 LOAD_GLOBAL              1 (NULL + normal_params)
+             12 LOAD_CONST               1 (1)
+             14 LOAD_CONST               2 (2)
+             16 LOAD_CONST               3 (3)
+             18 CALL                     3
+             26 POP_TOP
+             28 RETURN_CONST             0 (None)
+
+Disassembly of <code object all_keyword at 0x7f783e0311b0, file "calls.py", line 10>:
+ 10           0 RESUME                   0
+
+ 11           2 LOAD_GLOBAL              1 (NULL + normal_params)
+             12 LOAD_CONST               1 (1)
+             14 LOAD_CONST               2 (2)
+             16 LOAD_CONST               3 (3)
+             18 KW_NAMES                 4 (('one', 'two', 'three'))
+             20 CALL                     3
+             28 POP_TOP
+             30 RETURN_CONST             0 (None)
+
+Disassembly of <code object mixed at 0x7f783e031530, file "calls.py", line 13>:
+ 13           0 RESUME                   0
+
+ 14           2 LOAD_GLOBAL              1 (NULL + normal_params)
+             12 LOAD_CONST               1 (1)
+             14 LOAD_CONST               2 (3)
+             16 LOAD_CONST               3 (2)
+             18 KW_NAMES                 4 (('three', 'two'))
+             20 CALL                     3
+             28 POP_TOP
+             30 RETURN_CONST             0 (None)

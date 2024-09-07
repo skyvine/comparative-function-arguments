@@ -1,0 +1,275 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (0)
+              4 LOAD_CONST               1 (None)
+              6 IMPORT_NAME              0 (collections)
+              8 STORE_NAME               0 (collections)
+
+  3          10 LOAD_CONST               2 (<code object add_values at 0x73f604c91290, file "destructuring.py", line 3>)
+             12 MAKE_FUNCTION            0
+             14 STORE_NAME               1 (add_values)
+
+  6          16 PUSH_NULL
+             18 LOAD_NAME                1 (add_values)
+             20 LOAD_CONST               3 (1000)
+             22 LOAD_CONST               4 (1001)
+             24 LOAD_CONST               5 (1002)
+             26 CALL                     3
+             34 POP_TOP
+
+  7          36 PUSH_NULL
+             38 LOAD_NAME                1 (add_values)
+             40 LOAD_CONST               3 (1000)
+             42 LOAD_CONST               4 (1001)
+             44 LOAD_CONST               5 (1002)
+             46 KW_NAMES                 6 (('a', 'b', 'c'))
+             48 CALL                     3
+             56 POP_TOP
+
+  9          58 BUILD_LIST               0
+             60 LOAD_CONST               7 ((1000, 1001, 1002))
+             62 LIST_EXTEND              1
+             64 STORE_NAME               2 (l)
+
+ 10          66 PUSH_NULL
+             68 LOAD_NAME                1 (add_values)
+             70 LOAD_NAME                2 (l)
+             72 CALL_FUNCTION_EX         0
+             74 POP_TOP
+
+ 12          76 LOAD_CONST               4 (1001)
+             78 LOAD_CONST               5 (1002)
+             80 BUILD_LIST               2
+             82 STORE_NAME               2 (l)
+
+ 13          84 PUSH_NULL
+             86 LOAD_NAME                1 (add_values)
+             88 LOAD_CONST               3 (1000)
+             90 BUILD_LIST               1
+             92 LOAD_NAME                2 (l)
+             94 LIST_EXTEND              1
+             96 CALL_INTRINSIC_1         6 (INTRINSIC_LIST_TO_TUPLE)
+             98 CALL_FUNCTION_EX         0
+            100 POP_TOP
+
+ 15         102 LOAD_CONST               3 (1000)
+            104 LOAD_CONST               4 (1001)
+            106 BUILD_LIST               2
+            108 STORE_NAME               2 (l)
+
+ 16         110 PUSH_NULL
+            112 LOAD_NAME                1 (add_values)
+            114 BUILD_LIST               0
+            116 LOAD_NAME                2 (l)
+            118 LIST_EXTEND              1
+            120 LOAD_CONST               5 (1002)
+            122 LIST_APPEND              1
+            124 CALL_INTRINSIC_1         6 (INTRINSIC_LIST_TO_TUPLE)
+            126 CALL_FUNCTION_EX         0
+            128 POP_TOP
+
+ 18         130 LOAD_CONST               7 ((1000, 1001, 1002))
+            132 STORE_NAME               3 (t)
+
+ 19         134 PUSH_NULL
+            136 LOAD_NAME                1 (add_values)
+            138 LOAD_NAME                3 (t)
+            140 CALL_FUNCTION_EX         0
+            142 POP_TOP
+
+ 21         144 LOAD_CONST               8 ((1001, 1002))
+            146 STORE_NAME               3 (t)
+
+ 22         148 PUSH_NULL
+            150 LOAD_NAME                1 (add_values)
+            152 LOAD_CONST               3 (1000)
+            154 BUILD_LIST               1
+            156 LOAD_NAME                3 (t)
+            158 LIST_EXTEND              1
+            160 CALL_INTRINSIC_1         6 (INTRINSIC_LIST_TO_TUPLE)
+            162 CALL_FUNCTION_EX         0
+            164 POP_TOP
+
+ 24         166 LOAD_CONST               9 ((1001,))
+            168 STORE_NAME               4 (t0)
+
+ 25         170 LOAD_CONST              10 ((1002,))
+            172 STORE_NAME               5 (t1)
+
+ 26         174 PUSH_NULL
+            176 LOAD_NAME                1 (add_values)
+            178 LOAD_CONST               3 (1000)
+            180 BUILD_LIST               1
+            182 LOAD_NAME                4 (t0)
+            184 LIST_EXTEND              1
+            186 LOAD_NAME                5 (t1)
+            188 LIST_EXTEND              1
+            190 CALL_INTRINSIC_1         6 (INTRINSIC_LIST_TO_TUPLE)
+            192 CALL_FUNCTION_EX         0
+            194 POP_TOP
+
+ 28         196 LOAD_CONST              11 ((1000, 1001))
+            198 STORE_NAME               3 (t)
+
+ 29         200 PUSH_NULL
+            202 LOAD_NAME                1 (add_values)
+            204 BUILD_LIST               0
+            206 LOAD_NAME                3 (t)
+            208 LIST_EXTEND              1
+            210 LOAD_CONST               5 (1002)
+            212 LIST_APPEND              1
+            214 CALL_INTRINSIC_1         6 (INTRINSIC_LIST_TO_TUPLE)
+            216 CALL_FUNCTION_EX         0
+            218 POP_TOP
+
+ 31         220 LOAD_CONST               3 (1000)
+            222 LOAD_CONST               4 (1001)
+            224 LOAD_CONST               5 (1002)
+            226 LOAD_CONST               6 (('a', 'b', 'c'))
+            228 BUILD_CONST_KEY_MAP      3
+            230 STORE_NAME               6 (d)
+
+ 32         232 PUSH_NULL
+            234 LOAD_NAME                1 (add_values)
+            236 LOAD_CONST              19 (())
+            238 BUILD_MAP                0
+            240 LOAD_NAME                6 (d)
+            242 DICT_MERGE               1
+            244 CALL_FUNCTION_EX         1
+            246 POP_TOP
+
+ 34         248 LOAD_CONST               4 (1001)
+            250 LOAD_CONST               5 (1002)
+            252 LOAD_CONST              12 (('b', 'c'))
+            254 BUILD_CONST_KEY_MAP      2
+            256 STORE_NAME               6 (d)
+
+ 35         258 PUSH_NULL
+            260 LOAD_NAME                1 (add_values)
+            262 LOAD_CONST              19 (())
+            264 LOAD_CONST              13 ('a')
+            266 LOAD_CONST               3 (1000)
+            268 BUILD_MAP                1
+            270 LOAD_NAME                6 (d)
+            272 DICT_MERGE               1
+            274 CALL_FUNCTION_EX         1
+            276 POP_TOP
+
+ 37         278 LOAD_CONST               3 (1000)
+            280 LOAD_CONST               4 (1001)
+            282 LOAD_CONST              14 (('a', 'b'))
+            284 BUILD_CONST_KEY_MAP      2
+            286 STORE_NAME               6 (d)
+
+ 38         288 PUSH_NULL
+            290 LOAD_NAME                1 (add_values)
+            292 LOAD_CONST              19 (())
+            294 BUILD_MAP                0
+            296 LOAD_NAME                6 (d)
+            298 DICT_MERGE               1
+            300 LOAD_CONST              15 ('c')
+            302 LOAD_CONST               5 (1002)
+            304 BUILD_MAP                1
+            306 DICT_MERGE               1
+            308 CALL_FUNCTION_EX         1
+            310 POP_TOP
+
+ 40         312 LOAD_CONST              13 ('a')
+            314 LOAD_CONST               3 (1000)
+            316 BUILD_MAP                1
+            318 STORE_NAME               7 (d0)
+
+ 41         320 LOAD_CONST              13 ('a')
+            322 LOAD_CONST               4 (1001)
+            324 BUILD_MAP                1
+            326 STORE_NAME               8 (d1)
+
+ 42         328 LOAD_CONST              13 ('a')
+            330 LOAD_CONST               5 (1002)
+            332 BUILD_MAP                1
+            334 STORE_NAME               9 (d2)
+
+ 43         336 PUSH_NULL
+            338 LOAD_NAME                1 (add_values)
+            340 LOAD_CONST              19 (())
+            342 BUILD_MAP                0
+            344 LOAD_NAME                7 (d0)
+            346 DICT_MERGE               1
+            348 LOAD_NAME                8 (d1)
+            350 DICT_MERGE               1
+            352 LOAD_NAME                9 (d2)
+            354 DICT_MERGE               1
+            356 CALL_FUNCTION_EX         1
+            358 POP_TOP
+
+ 45         360 PUSH_NULL
+            362 LOAD_NAME                0 (collections)
+            364 LOAD_ATTR               20 (Counter)
+            384 BUILD_LIST               0
+            386 LOAD_CONST              16 (('a', 'b', 'c', 'a', 'b', 'a'))
+            388 LIST_EXTEND              1
+            390 CALL                     1
+            398 STORE_NAME              11 (c)
+
+ 46         400 PUSH_NULL
+            402 LOAD_NAME                1 (add_values)
+            404 LOAD_CONST              19 (())
+            406 BUILD_MAP                0
+            408 LOAD_NAME               11 (c)
+            410 DICT_MERGE               1
+            412 CALL_FUNCTION_EX         1
+            414 POP_TOP
+
+ 48         416 PUSH_NULL
+            418 LOAD_NAME                0 (collections)
+            420 LOAD_ATTR               20 (Counter)
+            440 BUILD_LIST               0
+            442 LOAD_CONST              17 (('b', 'c', 'b'))
+            444 LIST_EXTEND              1
+            446 CALL                     1
+            454 STORE_NAME              11 (c)
+
+ 49         456 PUSH_NULL
+            458 LOAD_NAME                1 (add_values)
+            460 LOAD_CONST              19 (())
+            462 LOAD_CONST              13 ('a')
+            464 LOAD_CONST              18 (1)
+            466 BUILD_MAP                1
+            468 LOAD_NAME               11 (c)
+            470 DICT_MERGE               1
+            472 CALL_FUNCTION_EX         1
+            474 POP_TOP
+
+ 51         476 LOAD_CONST               3 (1000)
+            478 BUILD_LIST               1
+            480 STORE_NAME               2 (l)
+
+ 52         482 LOAD_CONST              15 ('c')
+            484 LOAD_CONST               5 (1002)
+            486 BUILD_MAP                1
+            488 STORE_NAME               6 (d)
+
+ 53         490 PUSH_NULL
+            492 LOAD_NAME                1 (add_values)
+            494 BUILD_LIST               0
+            496 LOAD_NAME                2 (l)
+            498 LIST_EXTEND              1
+            500 LOAD_CONST               4 (1001)
+            502 LIST_APPEND              1
+            504 CALL_INTRINSIC_1         6 (INTRINSIC_LIST_TO_TUPLE)
+            506 BUILD_MAP                0
+            508 LOAD_NAME                6 (d)
+            510 DICT_MERGE               1
+            512 CALL_FUNCTION_EX         1
+            514 POP_TOP
+            516 RETURN_CONST             1 (None)
+
+Disassembly of <code object add_values at 0x73f604c91290, file "destructuring.py", line 3>:
+  3           0 RESUME                   0
+
+  4           2 LOAD_FAST                0 (a)
+              4 LOAD_FAST                1 (b)
+              6 BINARY_OP                0 (+)
+             10 LOAD_FAST                2 (c)
+             12 BINARY_OP                0 (+)
+             16 RETURN_VALUE

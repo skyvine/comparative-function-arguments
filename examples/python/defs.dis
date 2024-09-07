@@ -1,0 +1,93 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object normal_params at 0x7f4aec505290, file "defs.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (normal_params)
+
+  7           8 LOAD_CONST               6 ((True, 'Two', 'Three'))
+             10 LOAD_CONST               1 (<code object all_default at 0x7f4aec505370, file "defs.py", line 7>)
+             12 MAKE_FUNCTION            1 (defaults)
+             14 STORE_NAME               1 (all_default)
+
+ 13          16 LOAD_CONST               2 (<code object all_positional at 0x7f4aec5051b0, file "defs.py", line 13>)
+             18 MAKE_FUNCTION            0
+             20 STORE_NAME               2 (all_positional)
+
+ 19          22 LOAD_CONST               3 (<code object all_keyword at 0x7f4aec505530, file "defs.py", line 19>)
+             24 MAKE_FUNCTION            0
+             26 STORE_NAME               3 (all_keyword)
+
+ 25          28 LOAD_CONST               4 (<code object mixed at 0x7f4aec505610, file "defs.py", line 25>)
+             30 MAKE_FUNCTION            0
+             32 STORE_NAME               4 (mixed)
+             34 RETURN_CONST             5 (None)
+
+Disassembly of <code object normal_params at 0x7f4aec505290, file "defs.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (one)
+              4 POP_JUMP_IF_FALSE        3 (to 12)
+
+  3           6 LOAD_FAST                1 (two)
+              8 POP_TOP
+             10 RETURN_CONST             0 (None)
+
+  5     >>   12 LOAD_FAST                2 (three)
+             14 POP_TOP
+             16 RETURN_CONST             0 (None)
+
+Disassembly of <code object all_default at 0x7f4aec505370, file "defs.py", line 7>:
+  7           0 RESUME                   0
+
+  8           2 LOAD_FAST                0 (one)
+              4 POP_JUMP_IF_FALSE        3 (to 12)
+
+  9           6 LOAD_FAST                1 (two)
+              8 POP_TOP
+             10 RETURN_CONST             0 (None)
+
+ 11     >>   12 LOAD_FAST                2 (three)
+             14 POP_TOP
+             16 RETURN_CONST             0 (None)
+
+Disassembly of <code object all_positional at 0x7f4aec5051b0, file "defs.py", line 13>:
+ 13           0 RESUME                   0
+
+ 14           2 LOAD_FAST                0 (one)
+              4 POP_JUMP_IF_FALSE        3 (to 12)
+
+ 15           6 LOAD_FAST                1 (two)
+              8 POP_TOP
+             10 RETURN_CONST             0 (None)
+
+ 17     >>   12 LOAD_FAST                2 (three)
+             14 POP_TOP
+             16 RETURN_CONST             0 (None)
+
+Disassembly of <code object all_keyword at 0x7f4aec505530, file "defs.py", line 19>:
+ 19           0 RESUME                   0
+
+ 20           2 LOAD_FAST                0 (one)
+              4 POP_JUMP_IF_FALSE        3 (to 12)
+
+ 21           6 LOAD_FAST                1 (two)
+              8 POP_TOP
+             10 RETURN_CONST             0 (None)
+
+ 23     >>   12 LOAD_FAST                2 (three)
+             14 POP_TOP
+             16 RETURN_CONST             0 (None)
+
+Disassembly of <code object mixed at 0x7f4aec505610, file "defs.py", line 25>:
+ 25           0 RESUME                   0
+
+ 26           2 LOAD_FAST                0 (one)
+              4 POP_JUMP_IF_FALSE        3 (to 12)
+
+ 27           6 LOAD_FAST                1 (two)
+              8 POP_TOP
+             10 RETURN_CONST             0 (None)
+
+ 29     >>   12 LOAD_FAST                2 (three)
+             14 POP_TOP
+             16 RETURN_CONST             0 (None)

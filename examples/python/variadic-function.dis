@@ -1,0 +1,94 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object add_positional_values at 0x7f27b628d290, file "variadic-function.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (add_positional_values)
+
+  4           8 LOAD_CONST               1 (<code object add_named_values at 0x7f27b6437530, file "variadic-function.py", line 4>)
+             10 MAKE_FUNCTION            0
+             12 STORE_NAME               1 (add_named_values)
+
+  7          14 LOAD_CONST               2 (<code object add_values at 0x7f27b62bd570, file "variadic-function.py", line 7>)
+             16 MAKE_FUNCTION            0
+             18 STORE_NAME               2 (add_values)
+
+ 10          20 PUSH_NULL
+             22 LOAD_NAME                0 (add_positional_values)
+             24 LOAD_CONST               3 (1000)
+             26 LOAD_CONST               4 (1001)
+             28 LOAD_CONST               5 (1002)
+             30 LOAD_CONST               6 (1003)
+             32 CALL                     4
+             40 POP_TOP
+
+ 11          42 PUSH_NULL
+             44 LOAD_NAME                2 (add_values)
+             46 LOAD_CONST               3 (1000)
+             48 LOAD_CONST               4 (1001)
+             50 LOAD_CONST               5 (1002)
+             52 LOAD_CONST               6 (1003)
+             54 CALL                     4
+             62 POP_TOP
+
+ 13          64 PUSH_NULL
+             66 LOAD_NAME                1 (add_named_values)
+             68 LOAD_CONST               3 (1000)
+             70 LOAD_CONST               4 (1001)
+             72 LOAD_CONST               5 (1002)
+             74 LOAD_CONST               6 (1003)
+             76 KW_NAMES                 7 (('named_val0', 'named_val1', 'named_val2', 'named_val3'))
+             78 CALL                     4
+             86 POP_TOP
+
+ 14          88 PUSH_NULL
+             90 LOAD_NAME                2 (add_values)
+             92 LOAD_CONST               3 (1000)
+             94 LOAD_CONST               4 (1001)
+             96 LOAD_CONST               5 (1002)
+             98 LOAD_CONST               6 (1003)
+            100 KW_NAMES                 7 (('named_val0', 'named_val1', 'named_val2', 'named_val3'))
+            102 CALL                     4
+            110 POP_TOP
+
+ 16         112 PUSH_NULL
+            114 LOAD_NAME                3 (add_all_values)
+            116 LOAD_CONST               5 (1002)
+            118 LOAD_CONST               6 (1003)
+            120 LOAD_CONST               3 (1000)
+            122 LOAD_CONST               4 (1001)
+            124 KW_NAMES                 8 (('named_val0', 'named_val1'))
+            126 CALL                     4
+            134 POP_TOP
+            136 RETURN_CONST             9 (None)
+
+Disassembly of <code object add_positional_values at 0x7f27b628d290, file "variadic-function.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_GLOBAL              1 (NULL + sum)
+             12 LOAD_FAST                0 (vals)
+             14 CALL                     1
+             22 RETURN_VALUE
+
+Disassembly of <code object add_named_values at 0x7f27b6437530, file "variadic-function.py", line 4>:
+  4           0 RESUME                   0
+
+  5           2 LOAD_GLOBAL              1 (NULL + sum)
+             12 LOAD_FAST                0 (named_vals)
+             14 LOAD_ATTR                3 (NULL|self + values)
+             34 CALL                     0
+             42 CALL                     1
+             50 RETURN_VALUE
+
+Disassembly of <code object add_values at 0x7f27b62bd570, file "variadic-function.py", line 7>:
+  7           0 RESUME                   0
+
+  8           2 LOAD_GLOBAL              1 (NULL + sum)
+             12 LOAD_FAST                0 (vals)
+             14 CALL                     1
+             22 LOAD_GLOBAL              1 (NULL + sum)
+             32 LOAD_FAST                1 (named_vals)
+             34 LOAD_ATTR                3 (NULL|self + values)
+             54 CALL                     0
+             62 CALL                     1
+             70 BINARY_OP                0 (+)
+             74 RETURN_VALUE

@@ -1,0 +1,105 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 ('DEFINITIONS')
+              4 STORE_NAME               0 (section)
+
+  3           6 LOAD_CONST               1 (<code object add_values at 0x7fe7c4af3360, file "named-value.py", line 3>)
+              8 MAKE_FUNCTION            0
+             10 STORE_NAME               1 (add_values)
+
+  6          12 LOAD_CONST               2 (<code object add_values_mixed at 0x7fe7c4af3430, file "named-value.py", line 6>)
+             14 MAKE_FUNCTION            0
+             16 STORE_NAME               2 (add_values_mixed)
+
+  9          18 LOAD_CONST               3 (<code object add_values_all_named at 0x7fe7c4af3500, file "named-value.py", line 9>)
+             20 MAKE_FUNCTION            0
+             22 STORE_NAME               3 (add_values_all_named)
+
+ 12          24 LOAD_CONST               4 ('PURE POSITIONAL CALL')
+             26 STORE_NAME               0 (section)
+
+ 14          28 PUSH_NULL
+             30 LOAD_NAME                1 (add_values)
+             32 LOAD_CONST               5 (1000)
+             34 LOAD_CONST               6 (1001)
+             36 CALL                     2
+             44 POP_TOP
+
+ 16          46 LOAD_CONST               7 ('PURE NAMED CALLS')
+             48 STORE_NAME               0 (section)
+
+ 18          50 PUSH_NULL
+             52 LOAD_NAME                1 (add_values)
+             54 LOAD_CONST               6 (1001)
+             56 LOAD_CONST               5 (1000)
+             58 KW_NAMES                 8 (('b', 'a'))
+             60 CALL                     2
+             68 POP_TOP
+
+ 19          70 PUSH_NULL
+             72 LOAD_NAME                2 (add_values_mixed)
+             74 LOAD_CONST               6 (1001)
+             76 LOAD_CONST               5 (1000)
+             78 KW_NAMES                 9 (('named', 'named_or_positional'))
+             80 CALL                     2
+             88 POP_TOP
+
+ 20          90 PUSH_NULL
+             92 LOAD_NAME                3 (add_values_all_named)
+             94 LOAD_CONST               6 (1001)
+             96 LOAD_CONST               5 (1000)
+             98 KW_NAMES                 8 (('b', 'a'))
+            100 CALL                     2
+            108 POP_TOP
+
+ 22         110 LOAD_CONST              10 ('MIXED CALLS')
+            112 STORE_NAME               0 (section)
+
+ 24         114 PUSH_NULL
+            116 LOAD_NAME                1 (add_values)
+            118 LOAD_CONST               5 (1000)
+            120 LOAD_CONST               6 (1001)
+            122 KW_NAMES                11 (('b',))
+            124 CALL                     2
+            132 POP_TOP
+
+ 25         134 PUSH_NULL
+            136 LOAD_NAME                2 (add_values_mixed)
+            138 LOAD_CONST               5 (1000)
+            140 LOAD_CONST               6 (1001)
+            142 KW_NAMES                12 (('named',))
+            144 CALL                     2
+            152 POP_TOP
+
+ 26         154 PUSH_NULL
+            156 LOAD_NAME                3 (add_values_all_named)
+            158 LOAD_CONST               5 (1000)
+            160 LOAD_CONST               6 (1001)
+            162 KW_NAMES                13 (('a', 'b'))
+            164 CALL                     2
+            172 POP_TOP
+            174 RETURN_CONST            14 (None)
+
+Disassembly of <code object add_values at 0x7fe7c4af3360, file "named-value.py", line 3>:
+  3           0 RESUME                   0
+
+  4           2 LOAD_FAST                0 (a)
+              4 LOAD_FAST                1 (b)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE
+
+Disassembly of <code object add_values_mixed at 0x7fe7c4af3430, file "named-value.py", line 6>:
+  6           0 RESUME                   0
+
+  7           2 LOAD_FAST                0 (named_or_positional)
+              4 LOAD_FAST                1 (named)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE
+
+Disassembly of <code object add_values_all_named at 0x7fe7c4af3500, file "named-value.py", line 9>:
+  9           0 RESUME                   0
+
+ 10           2 LOAD_FAST                0 (a)
+              4 LOAD_FAST                1 (b)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE

@@ -1,0 +1,21 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object add_values at 0x7f419763b360, file "simple.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (add_values)
+
+  4           8 PUSH_NULL
+             10 LOAD_NAME                0 (add_values)
+             12 LOAD_CONST               1 (1000)
+             14 LOAD_CONST               2 (1001)
+             16 CALL                     2
+             24 POP_TOP
+             26 RETURN_CONST             3 (None)
+
+Disassembly of <code object add_values at 0x7f419763b360, file "simple.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (a)
+              4 LOAD_FAST                1 (b)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE

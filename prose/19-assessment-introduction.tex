@@ -1,0 +1,64 @@
+\section{Overview}
+Most of this part is dedicated to describing the features of various languages that are
+relavent to this paper, in terms defined by this paper.
+Each of these sections will start with a summary of the features provided by the language.
+Next, it will explain the background knowledge necessary in order to understand the
+feature descriptions.
+This explanation will include an example of a "simple function and call" which serves two
+purposes.
+First, it provides the reader with a concrete example of what analysis looks like in the
+context of this language.
+For example, in Python "analysis" means assessing the behavior of the interpreter and the
+bytocode emitted by the compiler.
+Second, it provides a point of comparison when describing features.
+In the Python analysis, the description of destructuring discusses how the bytecode for
+this feature differs from a call that does not include destructuring.
+This keeps each section shorter because they do not have to explain the baseline they are
+being compared to.
+It also makes it easier for a reader to focus only on the features that interest them
+because they can read the simple call section then the feature section without having to
+pick through other features to find the background information that they require.
+Finally, each language analysis will describe each of the features.
+
+Each feature description will start either with a statement that the feature is not
+provided or a statement of how the feature is provided.
+For example, in Python positional parameters are the "default behavior".
+Tutorials (including the official tutorial contained in the repository) commonly introduce
+functions by using positional parameters and introduce "keyword arguments" as a separate
+feature at a later point.
+Therefore, the Python section about positional values starts with "provided by default"
+while the section about named values starts with "provided through keyword arguments".
+This helps the reader understand the feature's relationship to the language and clarifies
+what terminology they should expect to see if they are reading language documentation, or
+what terms they should use if they want to perform a digital search for more information.
+After this statement, any distinctive qualities of the feature as provided by the language
+will be noted.
+
+Finally, there will be 3 subsections: Syntax, Implementation, and Historical Record.
+All 3 of these sections inform the implementation of the mechanism and perform a service
+for the reader
+\footnote{It should go without saying that the author is also a reader, albeit a
+particularly invested one. =)}.
+
+The syntax section explains what the source code looks like when the feature is used.
+This helps readers who are unfamiliar with the language in question understand the code
+snippets in the following subsections.
+
+The implementation section explains the language behavior which causes the feature to be
+provided.
+This helps clarify the "concrete things" that the argument is associating.
+
+The historical record section discusses, where possible, the motivation for the feature
+and lessons learned from implementation and community response.
+This gives the reader context about the environment the feature exists in, deepening their
+understanding.
+
+The final section synthesizes the information from the descriptions.
+When different communities have similar concerns it will merge these concerns into a
+single description.
+When the concerns are distinct it will clarify the distinction.
+It will also look for opportunities to apply solutions created by one community to a
+concern raised by another.
+Finally, it will provide a compact table listing all concerns.
+The mechanism will either address each of these concerns or provide justifications for
+leaving specific concerns unaddressed.

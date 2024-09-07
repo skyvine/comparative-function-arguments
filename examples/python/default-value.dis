@@ -1,0 +1,28 @@
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               5 ((2000,))
+              4 LOAD_CONST               1 (<code object add_values at 0x7fe3bdc13360, file "default-value.py", line 1>)
+              6 MAKE_FUNCTION            1 (defaults)
+              8 STORE_NAME               0 (add_values)
+
+  4          10 PUSH_NULL
+             12 LOAD_NAME                0 (add_values)
+             14 LOAD_CONST               2 (1000)
+             16 CALL                     1
+             24 POP_TOP
+
+  5          26 PUSH_NULL
+             28 LOAD_NAME                0 (add_values)
+             30 LOAD_CONST               2 (1000)
+             32 LOAD_CONST               3 (1001)
+             34 CALL                     2
+             42 POP_TOP
+             44 RETURN_CONST             4 (None)
+
+Disassembly of <code object add_values at 0x7fe3bdc13360, file "default-value.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (mandatory)
+              4 LOAD_FAST                1 (optional)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE

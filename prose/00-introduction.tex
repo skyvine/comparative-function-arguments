@@ -1,0 +1,192 @@
+\section{Introduction}
+
+Functions are one of the core abstractions that programmers use.
+These functions - and their authors - have to communicate with different calling sites -
+and their authors - in different contexts.
+This communication is performed through the use of arguments.
+However, the term "argument" is used in different ways depending on the speaker, listener,
+and context.
+For example, people who are working on a new function written in the C programming
+language might use the word "arguments" to refer to the set of names that appear between
+the parantheses in the function signature.
+Those same people who are later debugging code which includes a call to that function
+might use the word "arguments" to refer to the values which are given to the function.
+This informal use of the word is sufficient for day-to-day use, but it starts to break
+down when examined more closely.
+
+Consider that the Rust programming lanugage allows programmers to specify arguments using
+one of two mechanisms.
+In the common case, programmers can use a plain name and type:
+
+\begin{pygmented}[lang=rust]
+fn jump_plain(starting: &Point) -> Point {
+  Point {
+    x: starting.x,
+    y: starting.y * 2
+  }
+}
+\end{pygmented}
+
+It would not be controvertial to claim that this function contains one argument.
+This argument happens to be associated with a local variable named \texttt{starting} which
+is guaranteed to contain data of type \texttt{Point}.
+
+When it is useful, programmers can also specify an argument by a pattern
+\footnote{Technically the "plain name" is also a pattern, albeit a very simple one.}
+and type:
+
+\begin{pygmented}[lang=rust]
+fn jump_pattern(Point {
+                  x: horizontal,
+                  y: vertical
+                }: &Point)
+  -> Point {
+
+  Point {
+    x: *horizontal,
+    y: *vertical * 2
+  }
+}
+\end{pygmented}
+
+Does this version contain one argument or two?
+We could say that it contains 2 arguments, \texttt{horizontal} and \texttt{vertical}.
+In the context of the function definition this would make sense.
+However, at the calling site both appear to accept only a single argument:
+
+\begin{pygmented}[lang=rust]
+jump_plain  (&uut);
+jump_pattern(&uut);
+\end{pygmented}
+
+Consider also the conventions in shell programming languages.
+Shell functions might include "options" which are arguments that may or may not be related
+to the argument that follows it.
+For example, if a function encounters an argument with the value "-{}-ignore" then it
+might interpret the following argument as a specification of something to ignore.
+But if it instead encounters an argument with the value "-{}-ignore=foo" it might
+interpret "foo" as the thing to ignore.
+The following argument would then be interpreted in an entirely different manner.
+In common speech, it is easy to treat both "-{}-ignore" and "foo" as part of the same
+argument: "the ignore argument has value foo".
+When the both the name and value are provided in the same string ("-{}-ignore=foo"), this
+is technically accurate from the perspective of the interpreter (it is a single argument).
+However, when they are given in diffrent strings ("-{}-ignore" "foo") it is not (they are
+two arguments which are semantically related).
+
+The premise of this paper is to resolve the above inconsistencies by treating an
+"argument" as a set of associations between concrete things.
+In the Rust example both versions of the function have a single argument.
+In both cases this argument is associated with a single value at the calling site.
+However, in the pattern case the argument is associated with 2 local variables in the
+function definition.
+Neither the values at the calling sites nor the local variables in the definitions are the
+arguments: the association between the values and the variables are the arguments.
+In the Bash example, the "-{}-ignore" and "foo" values are just that: values.
+When the function author uses a helper program like \texttt{getopt} to process these
+values with a given argument specification, both of the values become associated with the
+same argument.
+
+This paper will explore the implications of the premise by describing the common and
+unique features associated with function arguments across several languages at different
+levels of abstraction.
+Additionally, it will present a mechanism implemented in GNU Guile which frees
+programmers to create arbitrary associations when specifying arguments.
+This will generalize the features provided by various languages, allowing programmers to
+use the set of features that make sense given the context they are working in.
+
+\subsection{Reproducibility and Transparency}
+
+The source code used in example snippets can be found in the online git repository located
+at http://git.sr.ht/~skyvine/comparative-function-arguments.
+The source code in this repository contains far more than the snippets provided in this
+paper, because I checked a number of variations on things that turned out to be
+uninteresting for the purpose of this paper, but I do not feel comfortable deleting the
+information gathered from these attempts (the fact that the outcome is uninteresting is
+itself interesting in some contexts).
+The repository includes files appropriate for use with GNU Guix to reproduce the software
+environment I used while creating this paper.
+It pins to a specific revision of the main Guix channel so that updates do not interfere
+with reproducibility.
+The Makefile within the "examples" directory launches a pure shell for the user so that
+environmental factors do not interfere with reproducibility.
+
+The git repository also contains the bibtex file used to generate references in this
+paper.
+This source file contains additional information which is not present in the output, such
+as the SHA256 of referenced tarballs and the commit hash of source repositories.
+\footnote {
+	I intend to incorporate this information into the references in the final version of
+	this paper, but I have not used Latex before so I will need to learn how to do that.
+}
+
+\subsection{Clarifying Terminology}
+
+As mentioned above, this paper defines the term "argument" to refer to a set of
+associations between concrete code objects, such as values and variables.
+Some languages provide similar features under different names and sometimes those names
+do not align with the vocabulary used by this paper.
+For example, different communities use different terms to refer to the values that shell
+functions interpret as implying a value.
+A shell function might recognize a value "-{}-verbose" to mean that a variable named
+"verbose" should have the value "true".
+I have heard this mechanism variously referred to as a flag, a switch, or an option.
+This paper refers to this mechanism as an "implicit value" because the caller uses a name
+associated with the argument to imply a value which does not appear explicitly.
+A complete least of terms which describe a feature provided by more than one language
+follows:
+
+\textbf{Positional Value} \textit{(common name: N/A)}:
+These values are associated with arguments based on the index of the value in the list of
+all positional values.
+
+\textbf{Default Value} \textit{(common name: Optional Argument)}:
+A value that an author associates with an argument for use when
+the caller declines to supply a value.
+
+\textbf{Named Value} \textit{(common name: Keyword Argument, Option Argument
+\footnote{
+	The term "option argument" is not to be confused with the term "option\textbf{al}
+	argument".
+	The former is used by shell users to refer to an argument that come after an option
+	(such as "-{}-ignore" "foo" in the previous example) while an option\textbf{al} argument
+	is a term used by scripters and system programmers to refer to an argument associated
+	with a default value.
+})}:
+These values are associated with an argument based on a name which the caller attaches to
+the value.
+The argument may be associated with several \textbf{synonymous} names.
+
+\textbf{Implicit Value} \textit{(common names: Switch, Flag, Option)}:
+An argument has an implicit value if the caller can specify a name associated with the
+argument but omit the value.
+For example, the ubiquitous "--help" flag in most CLI tools is an implicit value.
+An argument with an implicit value may also have \textbf{antonyms}, which invert the
+semantics of the primary name.
+
+\textbf{Typed Value} \textit{(common name: N/A)}:
+Some languages allow or require associating a type with an argument, in which case the
+value provided by the caller must be compatible with that type.
+
+\textbf{Destructuring} \textit{(common names: Pattern, Unpacking)}:
+Some languages provide a mechanism to break a composite structure (which might be a struct
+or a container such as a list) into its component parts.
+In some cases this functionality is available to an author, who can declare that an
+argument should have a specific type but the values within that type should be bound to
+separate local variables.
+In other cases it might be available to a caller, in which case the values within a
+composite structure are associated with different arguments.
+It is possible for a language to provide both of these variants simultaneously.
+
+\textbf{Variadic Function} \textit{(common name: N/A)}:
+A function which can accept an arbitrary number of values.
+Variadic functions are distinct from arguments with default values because with default
+values the author controls the range of acceptable argument counts.
+With variadic functions, the caller can pass in an arbitrarily large number of arguments
+(physical limitations notwithstanding).
+Variadic values are values which are associated with this feature.
+For example, a variadic function may require one positional value at the beginning of the
+value list.
+The first value is not a variadic value but all other values are.
+A variadic variable is provided by some languages. This is a local variable bound to some
+(possibly empty) aggregate datatype (typically a list) which contains variadic values.
