@@ -214,7 +214,11 @@ The repository includes files appropriate for use with GNU Guix to reproduce the
 environment I used while creating this paper.
 It pins to a specific revision of the main Guix channel so that updates do not interfere
 with reproducibility.
-The Makefile within the "examples" directory launches a pure shell for the user so that
+The Makefile within the "examples" directory launches a pure shell\footnote{
+	Here, "pure" means that enviornment conditions such as variables are unset so that the
+	shell does not use any artifacts from the base operating system by mistake.
+}
+for the user so that
 environmental factors do not interfere with reproducibility.
 
 The git repository also contains the bibtex file used to generate references in this
