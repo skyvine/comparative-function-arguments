@@ -62,44 +62,150 @@ jump_pattern(&uut);
 Consider also the conventions in shell programming languages.
 Shell functions might include "options" which are arguments that may or may not be related
 to the argument that follows it.
-For example, if a function encounters an argument with the value "-{}-ignore" then it
-might interpret the following argument as a specification of something to ignore.
-But if it instead encounters an argument with the value "-{}-ignore=foo" it might
-interpret "foo" as the thing to ignore.
-The following argument would then be interpreted in an entirely different manner.
-In common speech, it is easy to treat both "-{}-ignore" and "foo" as part of the same
-argument: "the ignore argument has value foo".
-When the both the name and value are provided in the same string ("-{}-ignore=foo"), this
-is technically accurate from the perspective of the interpreter (it is a single argument).
-However, when they are given in diffrent strings ("-{}-ignore" "foo") it is not (they are
-two arguments which are semantically related).
+For example, consider the following function:
 
-The premise of this paper is to resolve the above inconsistencies by treating an
-"argument" as a set of associations between concrete things.
-In the Rust example both versions of the function have a single argument.
-In both cases this argument is associated with a single value at the calling site.
-However, in the pattern case the argument is associated with 2 local variables in the
-function definition.
-Neither the values at the calling sites nor the local variables in the definitions are the
-arguments: the association between the values and the variables are the arguments.
-In the Bash example, the "-{}-ignore" and "foo" values are just that: values.
-When the function author uses a helper program like \texttt{getopt} to process these
-values with a given argument specification, both of the values become associated with the
-same argument.
+\include{00-bash-example.tex}
 
-This paper will explore the implications of the premise by describing the common and
-unique features associated with function arguments across several languages at different
-levels of abstraction.
-Additionally, it will present a mechanism implemented in GNU Guile which frees
-programmers to create arbitrary associations when specifying arguments.
+Some of the ways this function could be called include (1) \texttt{main -{}-ignore=foo},
+(2) \texttt{main -{}-ignore foo}, (3) \texttt{main -ifoo}, or (4) \texttt{main -i foo}.
+In 1 and 3, the bash interpreter initially sees only a single argument while in 2 and 4
+it sees 2 separate arguments.
+In either case, the call to \texttt{getopt} reorganizes the arguments so that the name
+(either "-{}-ignore" or "-i") are separate from the value ("foo"), which enables the
+logic in the while loop.
+However, when humans communicate to each other we find it easier to treat these as part of
+the same argument: "the ignore argument is foo".
+
+\subsection{What is an argument?}
+
+So, how can we construct a definition of "function argument" which does not suffer from
+the above deficiencies?
+The definition provided by the C standard is a good place to start: it precisely defines 2
+relevant terms, parameter and argument
+\parencite[][Section 3]{c17}.
+It defines a parameter as an
+"object
+\footnote {
+	Use of the term "object" here refers to any region of memory, not the concept of an
+	object popularized by object-oriented programming.
+}
+declared as part of a function declaration or definition that acquires a value on
+entry to the function, or an identifier from the comma-separated list bounded by the
+parentheses immediately following the macro name in a function-like macro definition".
+It defines an argument as an
+"expression in the comma-separated list bounded by the parentheses in a function call
+expression, or a sequence of preprocessing tokens in the comma-separated list bounded by
+the parentheses in a function-like macro invocation".
+These definitions both reference the physics of computation.
+The parameter definition references the concept of an object - the electrical potentials
+which are interpreted as data - and the argument definitions references expressions, which
+could specify any number of physical actions.
+They also reference the abstract model that the C language uses to reason about
+computation.
+The parameter definition references declarations by the function author and the argument
+definition references the specification of values by the caller.
+The standard also defines a relationship between arguments and parameters:
+"In preparing for the call to a function, the arguments are evaluated, and each parameter
+is assigned the value of the corresponding argument"
+\parencite[][Section 6.5.2.2 paragraph 4]{c17}.
+We could visualize this description as follows:
+
+<diagram of variable/value with line connecting>
+
+Here the circles represent concepts within the C model of computation - the local
+variable declared by the parameter and the value given as an argument.
+The line between them represents their relationship: the expectation that the local
+variables will be initialized to the values.
+
+While this visualization fully encompasses the model described by the C standard, it does
+not fully encompass the mental model used by some programmers.
+For example, consider this C function:
+
+\begin{pygmented}[lang=c]
+/*
+ * Calculate the division of two numbers.
+ *
+ * lhs: The dividend
+ * rhs: The divisor
+ */
+float divide(float lhs, float rhs) {
+  return lhs / rhs;
+}
+\end{pygmented}
+
+The comment above the function reveals 2 elements in the author's mental model which are
+absent from the visualization: an explanation and a name.
+The explanation, such as the text "the dividend", communicates the intention of an
+argument's use from one person (an author) to another (a caller).
+The comment also clarifies that the names "lhs" and "rhs" are not simply the textual
+representation of local variables: they refer to the argument itself, even in contexts
+where the local variable is not directly relevant.
+We could update the visualization to look like this:
+
+<diagram with connections between values/local variables and names/explanations>
+
+However, as we add more elements this visualization will become increasingly difficult to
+read.
+It is also not a general visualization: the lines connecting the concepts are drawn based
+on the tools that we happen to be using to process them - the compiler associating the
+values and variables and the human associating the explanations and names.
+Suppose that we need to accommodate a static analyzer which looks for overly complex
+lines of code and recommends breaking them up into multiple lines.
+One of the lines might be a call to this function.
+It might report that the expression specifying the lhs value is significantly complex
+while the expression specifying the rhs value is a simple constant.
+See what just happened?
+The names "lhs" and "rhs" are now associated with the values in order to communicate
+information about the call without directly referencing the local variables which
+coincidentally share the same names.
+We could update the visualization to have a line between the "name" and "value" circles.
+However, this approach means that the visualization is context-specific and complex
+environments would have unreadable visualizations.
+It is more effective to promote the argument to a first-class concept within the
+visualization.
+Other concepts can become associated with the argument when they are used, and tools or
+people who are processing the argument can select the subset of related concepts which are
+relevant to them:
+
+<diagram of spoke model, with annotations showing which processors care about which things>
+
+This "spoke model" of function arguments trivially accommodates the problems found when
+trying to describe patterns in Rust and processing in Bash.
+In the case of Rust patterns we can simply have multiple "local variable" circles uniquely
+identified by the variable name:
+
+<diagram of Rust function w/ pattern, inc. 2 locals and canonical name>
+
+In the case of bash argument-handling, we can identify a number of different concept
+instances associated with the version and ignore arguments.
+Each has a long name, a short name, a canonical name\footnote{
+	The name that programmers would use when conversing, which happens to be the same as the
+	long name.
+}, automatic variables\footnote{
+	\$1, \$2, \$@, etc; note that which of these variables are associated with which
+	arguments changes over time (once when getopt is called and an undefined number of times
+	in the while loop), but this does not break the model. \textbf{Nice justification...}
+}, and local variables associated with them:
+
+<diagram of bash function w/ instances for version and ignore color-coded>
+
+In this conception, we can define an argument as \textit{a set of associations between
+concepts and/or their instances in a model of computation}. \textbf{Concepts and/or their
+instances? Seems a little hand-wavy.... concepts and instances are very different things.}
+
+This paper will explore the implications of this definiton by describing the common and
+unique features associated with function arguments across several languages.
+Additionally, it will present a mechanism implemented in GNU Guile, a dialect of scheme
+lisp, which frees programmers to create arbitrary associations when declaring arguments.
 This will generalize the features provided by various languages, allowing programmers to
-use the set of features that make sense given the context they are working in.
+use the set of features that make sense given the context they are working in without
+needing to change the language that they are programming in.
 
 \subsection{Reproducibility and Transparency}
 
 The source code used in example snippets can be found in the online git repository located
-at http://git.sr.ht/~skyvine/comparative-function-arguments.
-The source code in this repository contains far more than the snippets provided in this
+at http://git.sr.ht/\texttildelow{}skyvine/comparative-function-arguments.
+The source code in this repository contains more than the snippets provided in this
 paper, because I checked a number of variations on things that turned out to be
 uninteresting for the purpose of this paper, but I do not feel comfortable deleting the
 information gathered from these attempts (the fact that the outcome is uninteresting is
@@ -160,7 +266,7 @@ The argument may be associated with several \textbf{synonymous} names.
 \textbf{Implicit Value} \textit{(common names: Switch, Flag, Option)}:
 An argument has an implicit value if the caller can specify a name associated with the
 argument but omit the value.
-For example, the ubiquitous "--help" flag in most CLI tools is an implicit value.
+For example, the ubiquitous "-{}-help" flag in most CLI tools is an implicit value.
 An argument with an implicit value may also have \textbf{antonyms}, which invert the
 semantics of the primary name.
 

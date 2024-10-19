@@ -1,8 +1,42 @@
-TEMP=$(getopt -o 'ab:c::' --long 'a-long,b-long:,c-long::' -n 'example.bash' -- "$@")
+function main {
+	PRINT_VERSION=false
+	declare -a IGNORE_LIST
 
-if [ $? -ne 0 ]; then
-	echo 'Terminating...' >&2
-	exit 1
-fi
+	GETOPT_OUTPUT=$(getopt -o 'vi:' --long 'version,ignore:' -- "$@")
+	GETOPT_STATUS="$?"
 
-echo $TEMP
+	if [ "$GETOPT_STATUS" -ne 0 ]; then
+		echo 'getopt call failed with exit code $?.' >&2
+		exit 1
+	fi
+
+	eval set -- "$GETOPT_OUTPUT"
+	unset GETOPT_OUTPUT
+
+	while true; do
+		case "$1" in
+			'-v'|'--version')
+				PRINT_VERSION=true
+				shift
+				continue
+			;;
+			'-i'|'--ignore')
+				IGNORE_LIST+=("$2")
+				shift 2
+				continue
+			;;
+			'--')
+				shift
+				break
+			;;
+		esac
+	done
+
+	if [ "$PRINT_VERSION" = true ]; then
+		echo "Version 0.1"
+	else
+		echo "Ignored values: ${IGNORE_LIST[*]}"
+	fi
+}
+
+main "$@"
