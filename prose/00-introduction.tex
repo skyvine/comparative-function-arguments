@@ -32,25 +32,25 @@ This argument happens to be associated with a local variable named \texttt{start
 is guaranteed to contain data of type \texttt{Point}.
 
 When it is useful, programmers can also specify an argument by a pattern
-\footnote{Technically the "plain name" is also a pattern, albeit a very simple one.}
+\footnote{Technically the "plain name" is also a pattern, just a very simple one.}
 and type:
 
 \begin{pygmented}[lang=rust]
 fn jump_pattern(Point {
-                  x: horizontal,
-                  y: vertical
+                  x: h, // horizontal
+                  y: v  // vertical
                 }: &Point)
   -> Point {
 
   Point {
-    x: *horizontal,
-    y: *vertical * 2
+    x: *h,
+    y: *v * 2
   }
 }
 \end{pygmented}
 
 Does this version contain one argument or two?
-We could say that it contains 2 arguments, \texttt{horizontal} and \texttt{vertical}.
+We could say that it contains 2 arguments, \texttt{h} and \texttt{v}.
 In the context of the function definition this would make sense.
 However, at the calling site both appear to accept only a single argument:
 
@@ -68,13 +68,14 @@ For example, consider the following function:
 
 Some of the ways this function could be called include (1) \texttt{main -{}-ignore=foo},
 (2) \texttt{main -{}-ignore foo}, (3) \texttt{main -ifoo}, or (4) \texttt{main -i foo}.
-In 1 and 3, the bash interpreter initially sees only a single argument while in 2 and 4
-it sees 2 separate arguments.
+All of these calls are semantically synonymous.
+However, in 1 and 3, the bash interpreter initially sees only a single argument while in 2
+and 4 it sees 2 separate arguments.
 In either case, the call to \texttt{getopt} reorganizes the arguments so that the name
 (either "-{}-ignore" or "-i") are separate from the value ("foo"), which enables the
 logic in the while loop.
-However, when humans communicate to each other we find it easier to treat these as part of
-the same argument: "the ignore argument is foo".
+In contrast, human speakers find it easier to refer to these name-value pairs as a single
+unit, for example by saying "I gave foo to the ignore argument".
 
 \subsection{What is an argument?}
 
@@ -96,7 +97,7 @@ It defines an argument as an
 "expression in the comma-separated list bounded by the parentheses in a function call
 expression, or a sequence of preprocessing tokens in the comma-separated list bounded by
 the parentheses in a function-like macro invocation".
-These definitions both reference the physics of computation.
+Both of these definitions reference the physics of computation.
 The parameter definition references the concept of an object - the electrical potentials
 which are interpreted as data - and the argument definitions references expressions, which
 could specify any number of physical actions.
@@ -108,9 +109,18 @@ The standard also defines a relationship between arguments and parameters:
 "In preparing for the call to a function, the arguments are evaluated, and each parameter
 is assigned the value of the corresponding argument"
 \parencite[][Section 6.5.2.2 paragraph 4]{c17}.
-We could visualize this description as follows:
+We could visualize the description with the below diagram.
 
-<diagram of variable/value with line connecting>
+\textit{Note: In this diagram and the proceding paragraphs I will use the term "value"
+where the C standard uses the term "argument". This terminology is more sensibile in the
+final definition.}
+
+\begin{tikzpicture}
+	\path[shape=circle] (-1, 0) node[shape=circle, draw, minimum size=55, name=parameter,] {Parameter}
+	                    ( 4, 0) node[shape=circle, draw, minimum size=55, name=value,] {Value};
+	\draw [-] (parameter) -- (value);
+\end{tikzpicture}
+
 
 Here the circles represent concepts within the C model of computation - the local
 variable declared by the parameter and the value given as an argument.
@@ -140,59 +150,198 @@ argument's use from one person (an author) to another (a caller).
 The comment also clarifies that the names "lhs" and "rhs" are not simply the textual
 representation of local variables: they refer to the argument itself, even in contexts
 where the local variable is not directly relevant.
-We could update the visualization to look like this:
+In order to accommodate this, we need to update the visualization with "name" and
+"explanation" nodes.
+The explanation node is connected directly to the name a established by the comment.
+It is indirectly connected to both the parameter and the value through the name.
 
-<diagram with connections between values/local variables and names/explanations>
+\begin{tikzpicture}
+	\path[shape=circle]
+		( 3, -3) node[shape=circle, draw, minimum size=55, name=parameter,] {Parameter}
+		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
+		( 0,  0) node[shape=circle, draw, minimum size=55, name=name,] {Name}
+		( 0,  3) node[shape=circle, draw, minimum size=55, name=explanation,] {Explanation};
+	\draw [-] (parameter) -- (value);
+	\draw [-] (name)      -- (explanation);
+	\draw [-] (name)      -- (parameter);
+	\draw [-] (name)      -- (value);
+\end{tikzpicture}
 
-However, as we add more elements this visualization will become increasingly difficult to
-read.
-It is also not a general visualization: the lines connecting the concepts are drawn based
-on the tools that we happen to be using to process them - the compiler associating the
-values and variables and the human associating the explanations and names.
-Suppose that we need to accommodate a static analyzer which looks for overly complex
-lines of code and recommends breaking them up into multiple lines.
-One of the lines might be a call to this function.
-It might report that the expression specifying the lhs value is significantly complex
-while the expression specifying the rhs value is a simple constant.
-See what just happened?
-The names "lhs" and "rhs" are now associated with the values in order to communicate
-information about the call without directly referencing the local variables which
-coincidentally share the same names.
-We could update the visualization to have a line between the "name" and "value" circles.
-However, this approach means that the visualization is context-specific and complex
-environments would have unreadable visualizations.
+Unfortunately, this method of building the visualization will quickly become unwieldy.
+As we add more tools requiring more concepts the graph will grow in both size and
+complexity, as each tool might add new associations between nodes leading to a tangle of
+lines.
 It is more effective to promote the argument to a first-class concept within the
 visualization.
 Other concepts can become associated with the argument when they are used, and tools or
 people who are processing the argument can select the subset of related concepts which are
-relevant to them:
+relevant to them.
 
-<diagram of spoke model, with annotations showing which processors care about which things>
+\textit{Note: In this visualization and the rest of the papre I will abandon the term
+"Parameter" and instead refer to "local variables".
+Parameters are a special case of local variables. 
+However, the term "local variable" is not just more general it is also more concrete,
+focusing our attention on what the parameter means to the computer physically instead of
+the more abstract notion of a "parameter" that we borrow from mathematics.}
 
-This "spoke model" of function arguments trivially accommodates the problems found when
-trying to describe patterns in Rust and processing in Bash.
-In the case of Rust patterns we can simply have multiple "local variable" circles uniquely
-identified by the variable name:
+\begin{tikzpicture}
+	\path[shape=circle, align=center]
+		( 0,  0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
+		(-3,  3) node[shape=circle, draw, minimum size=55, name=local-variable,] {Local\\Variable}
+		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
+		( 3, -3) node[shape=circle, draw, minimum size=55, name=name,] {Name}
+		( 3,  3) node[shape=circle, draw, minimum size=55, name=explanation,] {Explanation};
+	\draw [-] (argument) -- (local-variable);
+	\draw [-] (argument) -- (value);
+	\draw [-] (argument) -- (name);
+	\draw [-] (argument) -- (explanation);
+\end{tikzpicture}
 
-<diagram of Rust function w/ pattern, inc. 2 locals and canonical name>
+This "spoke model" allows us to attach relavant concepts to the argument as a whole.
+Each processing tool can search for the concepts it needs by checking which things are
+attached to the argument.
+For example, consider a tool which assesses the complexity of lines of code in a program.
+It might encounter a line like this:
 
-In the case of bash argument-handling, we can identify a number of different concept
-instances associated with the version and ignore arguments.
-Each has a long name, a short name, a canonical name\footnote{
-	The name that programmers would use when conversing, which happens to be the same as the
-	long name.
-}, automatic variables\footnote{
-	\$1, \$2, \$@, etc; note that which of these variables are associated with which
-	arguments changes over time (once when getopt is called and an undefined number of times
-	in the while loop), but this does not break the model. \textbf{Nice justification...}
-}, and local variables associated with them:
+\begin{pygmented}[lang=c]
+divide(4, c=(a + (b * 2) / 3));
+\end{pygmented}
 
-<diagram of bash function w/ instances for version and ignore color-coded>
+This line would probably be rated as complex due to the use of assignment as an
+expression, and possibly due to the number of mathematical operations in the expression.
+The tool could simply reprt the line number but in complicated programs it might also be
+useful to specify which argument is the source of the problem.
+That is, instead of simply saying "on line number x" it could say "in the value given to
+the rhs argument in the call to divide on line number x".
+In order to determine the argument name it would first look for the argument that it
+associated with the source of the complexity.
+Then it looks for the name associated with the argument in order to understand how to
+communicate effectively with the human:
 
-In this conception, we can define an argument as \textit{a set of associations between
-concepts and/or their instances in a model of computation}. \textbf{Concepts and/or their
-instances? Seems a little hand-wavy.... concepts and instances are very different things.}
+\begin{tikzpicture}
+	\path[shape=circle, align=center]
+		( 0,  0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
+		(-3,  3) node[shape=circle, draw, minimum size=55, name=local-variable,] {Local\\Variable}
+		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
+		( 3, -3) node[shape=circle, draw, minimum size=55, name=name,] {Name}
+		( 3,  3) node[shape=circle, draw, minimum size=55, name=explanation,] {Explanation};
+	\draw [-               ] (argument) -- (local-variable);
+	\draw [<-, line width=1] (argument) -- (value);
+	\draw [->, line width=1] (argument) -- (name);
+	\draw [-               ] (argument) -- (explanation);
+\end{tikzpicture}
 
+This method solves the problem of connections between nodes growing out of control, but
+which nodes we choose to create still depends on the set of processors that we care
+about.
+For example, in the bash program we would want to include the concept of option names as
+well as the the variable which ultimately receives the value.
+In Bash, we would want to include a node for "environment variable" instead of "local
+variable".
+Additionally, Bash exposes some of the processing which is implicitly performed by the
+compiler in C.
+This makes it a useful example to demonstrate how actions typically taken by the
+compiler/interpreter can be mapped onto the visualization.
+I will focus on the case statement which determines which given values should be
+associated with which environment variables.
+First, the case statement examines the short or long option to determine which argument
+is being provided.
+This is represented by the green arrows in the below diagram, moving from the option to
+the argument.
+Next, the logic inside the relevant case determines which value is associated with the
+argument.
+The "version" argument determines the value by the mere presence of the name while the
+"ignore" argument determines the value by retrieving a value provided by the caller.
+Both methods are represented by the double-ended purple arrow, representing that the
+processor retrieves the value then returns to the argument for further processing.
+Finally, the value is placed into an environment variable.
+This is represented by the orange arrow, moving from the argument to the environment
+variable and "carrying" the value with it.
+
+\begin{tikzpicture}
+	\path[shape=circle, align=center]
+		( 0,  0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
+		(-3,  3) node[shape=circle, draw, minimum size=55, name=environment-variable,]
+			{Environment\\Variable}
+		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
+		( 3, -3) node[shape=circle, draw, minimum size=55, name=short-option,] {Short\\Option}
+		( 3,  3) node[shape=circle, draw, minimum size=55, name=long-option,] {Long\\Option}
+	;
+	\draw [->, line width=1,  color=orange] (argument) -- (environment-variable);
+	\draw [<->, line width=1, color=purple] (argument) -- (value);
+	\draw [<-, line width=1,  color=green ] (argument) -- (short-option);
+	\draw [<-, line width=1,  color=green ] (argument) -- (long-option);
+\end{tikzpicture}
+
+The Rust program produces a more complex graph due to the presence of the pattern.
+The compiler processes the pattern by looking at the data provided in a structured manner;
+it knows that a certain subset of bits should correspond to a certain variable instead of
+the entirety of the value.
+These subsets are not associated with the argument.
+Instad, they are associated with a data type which is associated with the argument.
+Where the Bash graph was relatively simple, with all nodes other than the Argument node
+containing exactly one connection to the Argument node, the Rust graph contains a subgraph
+attached to the Argument node.
+
+\begin{tikzpicture}
+	\path[shape=circle, align=center]
+		(0,     0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
+		(-1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-h,]
+			{Local\\Variable\\(\texttt{h})}
+		( 1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-v,]
+			{Local\\Variable\\(\texttt{v})}
+		( 1.5,  2) node[shape=circle, draw, minimum size=55, name=type,] {Type\\(Point)}
+		( 3.5,  1) node[shape=circle, draw, minimum size=55, name=member-x,] {Member\\(\texttt{x})}
+		( 3.5,  3) node[shape=circle, draw, minimum size=55, name=member-y,] {Member\\(\texttt{y})}
+		(-1.5,  2) node[shape=circle, draw, minimum size=55, name=value,] {Value}
+	;
+	\draw [-] (argument) -- (local-variable-h);
+	\draw [-] (argument) -- (local-variable-v);
+	\draw [-] (argument) -- (value);
+	\draw [-] (argument) -- (type);
+	\draw [-] (type) -- (member-x);
+	\draw [-] (type) -- (member-y);
+\end{tikzpicture}
+
+When the Rust compiler encounters a call to this function it first retrieves the value
+from the calling site.
+This is represented by the green arrow in the below diagram, moving from the value to the
+argument.
+Next, it looks at the members of the Point structure in order to determine which subsets
+of bytes are semantically relevant.
+This is shown in the double-ended purple arrows which represent the compiler performing
+this lookup and returning to the argument with this information in hand.
+Finally, it associates the relevant subsets with the relevant local variables as shown
+by the orange arrows moving from the argument to the local variables.
+
+\begin{tikzpicture}
+	\path[shape=circle, align=center]
+		(0,     0) node[shape=circle, draw, minimum size=55, name=argument,]
+				{Argument}
+		(-1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-h,]
+			{Local\\Variable\\(\texttt{h})}
+		( 1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-v,]
+			{Local\\Variable\\(\texttt{v})}
+		( 1.5,  2) node[shape=circle, draw, minimum size=55, name=type,]
+				{Type\\(Point)}
+		( 3.5,  1) node[shape=circle, draw, minimum size=55, name=member-x,]
+			{Member\\(\texttt{x})}
+		( 3.5,  3) node[shape=circle, draw, minimum size=55, name=member-y,]
+			{Member\\(\texttt{y})}
+		(-1.5,  2) node[shape=circle, draw, minimum size=55, name=value,]
+				{Value}
+	;
+	\draw [<-,  line width=1, color=green ] (argument) -- (value);
+	\draw [<->, line width=1, color=purple] (argument) -- (type);
+	\draw [<->, line width=1, color=purple] (type) -- (member-x);
+	\draw [<->, line width=1, color=purple] (type) -- (member-y);
+	\draw [->,  line width=1, color=orange] (argument) -- (local-variable-h);
+	\draw [->,  line width=1, color=orange] (argument) -- (local-variable-v);
+\end{tikzpicture}
+
+Visualizing arguments in this manner leads me to define an argument as an abstract concept
+which emerges from the way that processors (both computer and human) associate concrete
+pieces of code.
 This paper will explore the implications of this definiton by describing the common and
 unique features associated with function arguments across several languages.
 Additionally, it will present a mechanism implemented in GNU Guile, a dialect of scheme
@@ -270,7 +419,8 @@ The argument may be associated with several \textbf{synonymous} names.
 \textbf{Implicit Value} \textit{(common names: Switch, Flag, Option)}:
 An argument has an implicit value if the caller can specify a name associated with the
 argument but omit the value.
-For example, the ubiquitous "-{}-help" flag in most CLI tools is an implicit value.
+For example, the ubiquitous "-{}-help" flag in most CLI tools implies the value
+\texttt{true}.
 An argument with an implicit value may also have \textbf{antonyms}, which invert the
 semantics of the primary name.
 
@@ -279,8 +429,9 @@ Some languages allow or require associating a type with an argument, in which ca
 value provided by the caller must be compatible with that type.
 
 \textbf{Destructuring} \textit{(common names: Pattern, Unpacking)}:
-Some languages provide a mechanism to break a composite structure (which might be a struct
-or a container such as a list) into its component parts.
+Some languages provide a mechanism to break a composite structure
+\footnote{This might be a "proper" struct or a container such as a list}
+into its component parts.
 In some cases this functionality is available to an author, who can declare that an
 argument should have a specific type but the values within that type should be bound to
 separate local variables.

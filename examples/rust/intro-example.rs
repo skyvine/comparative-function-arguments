@@ -12,14 +12,14 @@ fn jump_plain(starting: &Point) -> Point {
 }
 
 fn jump_pattern(Point {
-                  x: horizontal,
-                  y: vertical
+                  x: h, // horizontal
+                  y: v  // vertical
                 }: &Point)
   -> Point {
 
   Point {
-    x: *horizontal,
-    y: *vertical * 2
+    x: *h,
+    y: *v * 2
   }
 }
 
