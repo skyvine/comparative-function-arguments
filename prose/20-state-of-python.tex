@@ -138,7 +138,7 @@ Function authors can specify that some arguments with only receive their value b
 position.
 These are referred to as "positional-only arguments".
 
-\subsubsection{Syntax}
+\subsubsection{Syntax \& Semantics}
 Callers specify positional values by providing a comma-separated list of values.
 Function authors specify positional-only arguments by listing a literal \texttt{/} after
 the final positional-only argument
@@ -236,7 +236,7 @@ This concern does not appear to be addressed by PEP 570
 \subsection{Default Value}
 Provided by default argument values.
 
-\subsubsection{Syntax}
+\subsubsection{Syntax \& Semantics}
 Function authors can define a default value by adding a literal \texttt{=} after the name
 of an argument, then the value
 \parencite[][reference/compound\_stmts.html section 8.7 "Function Definitions"]{python-doc-html}.
@@ -292,7 +292,7 @@ All named values must proceed all positional values
 Function authors can specify that some arguments will only receive their value by name.
 These are referred to as "keyword-only arguments".
 
-\subsubsection{Syntax}
+\subsubsection{Syntax \& Semantics}
 Callers provide named values by writing first a symbolic name, then a literal \texttt{=},
 then the value.
 \parencite[][reference/expressions.html section 6.3.4 "Calls"]{python-doc-html}.
@@ -409,7 +409,7 @@ However, they do guarantee that the hints will be available to external tools an
 supporting infrastructure to help the tools work correctly.
 Both static analyzers and runtime checkers can make use of annotations.
 
-\subsubsection{Syntax}
+\subsubsection{Syntax \& Semantics}
 
 Type hints are specified using function annotations, as defined in PEP 3107.
 This means that function authors add a colon and type name after the variable name
@@ -444,11 +444,11 @@ best practices or provide syntactic improvements to type specifications.
 However, the core mechanism that this paper is concerned with - associating a type with an
 argument, regardless of how that type is specified - remains unchanged.
 
-\subsection{Destructing (caller)}
+\subsection{Caller Destructing}
 Provided through argument unpacking.
 Caller destructuring is only available for iterables and mappings.
 
-\subsubsection{Syntax}
+\subsubsection{Syntax \& Semantics}
 This feature allows a caller to prefix one or more iterables with \texttt{*} in order to
 translate their contents into a set of positional values, and/or prefix one or more
 mappings with \texttt{**} to translate their contents into a set of named values.
@@ -602,7 +602,7 @@ The rationale given for this change was enhanced readability, as previously call
 either need to build iterables/dictionaries separately or destructure them manually,
 adding additional lines of code which are semantically sparse.
 
-\subsection{Destructuring (author)}
+\subsection{Author Destructuring}
 While python does not currently support authorial destructuring, it did so prior to
 version 3.0 \parencite[][peps/pep-3113.rst]{python-peps}.
 It allowed authors to declare that arguments should receive tuples whose values would be
@@ -628,7 +628,7 @@ Provided by arbitrary argument lists and dictionaries.
 Positional values are collected by the former while named values are collected by the
 latter.
 
-\subsubsection{Syntax}
+\subsubsection{Syntax \& Semantics}
 Function authors specify variadic-ness by specifying the name for one or two variadic
 variables.
 The name for the variadic list must be prefixied by a \texttt{*} while the name for the
