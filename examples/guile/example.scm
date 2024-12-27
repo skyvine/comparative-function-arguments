@@ -1,10 +1,11 @@
 (use-modules (ice-9 optargs))
 
-(define* (all-positional-mandatory one two three)
+(define (all-positional-mandatory one two three)
   (if one two three))
 
 (define (call-it)
-  (all-positional-mandatory "oNE" "tWO" "tHREE"))
+  (all-positional-mandatory "oNE" "tWO" "tHREE")
+  #t)
 
 (define* (different-kinds-of-arguments positional
                                        #:optional (default "Default")

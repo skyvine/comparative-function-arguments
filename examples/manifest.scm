@@ -15,5 +15,6 @@
         "man-db"
         "python-next"
         "rust"
+        "sed"
         "the-silver-searcher"
         "util-linux"))

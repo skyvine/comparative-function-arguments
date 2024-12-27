@@ -1,0 +1,877 @@
+\section{Guile}
+
+\textbf{TODO:
+\begin{itemize}
+  \item{Historical record of GOOPS}
+  \item{Talk about lambda-case in background}
+  \item{Discuss rNrs in background & particularly r2rs}
+  \item{Remove most of the words from the background section...}
+  \item{Figure out GOOPS bytecode}
+  \item{Fix citation to manual to properly cite info manual instead of repo url}
+  \item{Figure out citation for devel archive}
+  \item{Double-check bytecode samples are still correct after aux refactoring}
+\end{itemize}
+}
+
+Definition of define*
+\parencite[][modules/system/ice-9/psyntax.scm lines 3377-3383]{guile-source}.
+
+Guile provides the following features:
+
+\begin{itemize}
+  \item{Destructuring}
+  \item{Named Value}
+  \item{Default Values}
+  \item{Positional Value}
+  \item{Typed Values}
+  \item{Variadic Functions}
+\end{itemize}
+
+\subsection{Background}
+Guile is an implementation of the scheme programming language, which itself is a dialect
+of the lisp programming language.
+Lisp, which stands for "LISt Processing" is a family of languages which are grouped
+together because of their relationship to a programming language originally developed by
+a small group of people with support from various institutions including the
+Massachussettes Institute of Technology and the United States military
+\parencite[][page 195]{original-lisp-paper-pt-1}.
+The most immediately noticable differences from common languages like C++ and Python is
+that they use prefix notation, put the open parenthesis before the function name, and
+allow a wider variety of characters to appear in variable names.
+For example, this is how one would call a getter function in lisp, comparable to
+\texttt{object\_variable.getter\_func\_name()}:
+
+\begin{pygmented}[lang=lisp]
+(getter-func-name object-variable)
+\end{pygmented}
+
+Note that the function name comes before the object name, the parentheses enclose both
+names, and hyphens are used instead of underscores.
+
+Prefix notation applies to primitive mathematical operations too.
+For example, one can add 3 numbers in lisp with this expression:
+
+\begin{pygmented}[lang=lisp]
+(+ 0 1 2)
+\end{pygmented}
+
+Furthermore, lisp languages ensure that all program text can be represented as valid code
+objects.
+For example, when discussing the example \texttt{add-values} function throughout this
+paper, I might refer to the variables by their textual representations "a" and "b".
+In many languages these textual representations are not associated with distinct code
+objects that can be manipulated by the programming language itself.
+Macro systems and code generation tools typically try to address this deficiency by
+directly manipulating the textual representation before it is given to the compiler and/or
+interpreter.
+\textbf{TODO: This doesn't seem entirely fair. Rust macros, Python strings, etc. Do I even
+need to talk about this or am I just stanning?}
+Lisp languages instead provide a direct representation of variable names, which are called
+symbols.
+A symbol can be represented in lisp by prefixing a variable name with a single quotation
+mark:
+
+\begin{pygmented}[lang=lisp]
+(class-of 'example)
+; result: #<<class> <symbol> 7f8540a21000>
+\end{pygmented}
+
+Additionally, if a paranthesized list is prefixed with a quotation mark the contents are
+treated as a literal list instead of a fuction call:
+
+\begin{pygmented}[lang=lisp]
+(add-values 1000 1001)
+; result: 2001
+
+'(add-values 1000 1001)
+; result: '(add-values 1000 1001)
+\end{pygmented}
+
+All lisp dialects share these common features
+\footnote{
+  This is not an exhaustive list of lisp-language features, nor am I aware of a definitive
+  list of features "required to be a lisp".
+  An attempt to create one would be... ill-advised. =)
+}.
+
+A dialect of lisp determines which primitives exist in the language.
+For example, the scheme dialect states that \texttt{define} can be used to create a
+function like this:
+
+\begin{pygmented}[lang=lisp]
+(define (add-values a b)
+  (+ a b))
+\end{pygmented}
+
+Guile is an implementation of scheme, so it provides the requirements given by the
+standard.
+It also extends scheme with unique fuctionality such as additional functions designed for
+operating on Linux systems.
+It implements a compiler which produces bytecode, an interpreter which executes bytecode,
+and an interpreter which directly executes program text
+\parencite[][modules/language/scheme/spec.scm lines 43-45]{guile-source}.
+This paper will generally focus on compiled bytecode as this keeps the analysis consistent
+with other sections and is the typical way to execute Guile code\footnote{
+  For example, running \texttt{guile script-name} will first compile the script then run
+  the compiled file rather than running the script directly.
+}.
+
+Guile bytecode operates as a stack machine with 2 pointers into the stack: the frame
+pointer and the stack pointer.
+\parencite[][Section 9.3.2]{guile-manual}.
+The frame pointer stores a location near\footnote{
+  It is "near" the beginning rather than "at" the beginning because some metadata is
+  stored before the frame pointer's location; this metadata will not be relevant to this
+  paper.
+}
+the beginning of the frame, where each frame represents a single function call.
+The stack pointer keeps track of the end of the stack, like a pointer to the end of an
+array
+\parencite[][Section 9.3.3]{guile-manual}.
+When instructions take an index, they differ in whether they take in and index relative to
+the stack pointer or the frame pointer
+\parencite[][Section 9.3.5]{guile-manual}.
+This paper will always reference indexes relative to the stack pointer for the sake of
+consistency.
+
+\subsubsection{The optargs module}
+Many of the features described in this paper are provided through Guile's \texttt{optargs}
+module.
+Here I will explain the general syntax of the \texttt{optargs} module and its history.
+
+\textbf{Syntax}
+
+In plain scheme, functions are defined like this:
+
+\begin{pygmented}[lang=lisp]
+(define (add-values a b)
+  (+ a b))
+\end{pygmented}
+
+The function's name is \texttt{add-value} and the arguments are \texttt{a} and \texttt{b}.
+Callers can only call the function by providing positional values for every argument:
+
+
+\begin{pygmented}[lang=lisp]
+(add-values 2001 2002)
+;; results in 3003
+\end{pygmented}
+
+The \texttt{optargs} module adds a new way of defining functions, with \texttt{define*}.
+This can take the same inputs that a plain \texttt{define} takes, in which case the
+semantics are identical:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values a b)
+  (+ a b))
+\end{pygmented}
+
+Authors can change the semantics by adding keywords to the function signature.
+Keywords modify all following arguments, until a different keyword is reached.
+For example, this definition requires callers to supply both \texttt{a} and \texttt{b}
+with named values:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:key a b)
+  (+ a b))
+\end{pygmented}
+
+While this one requires callers to supply \texttt{a} positionally and \texttt{b} by name,
+but allows the caller to omit a value for \texttt{b}:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values a #:key b)
+  (+ a b))
+\end{pygmented}
+
+This one also requires callers to supply \texttt{a} positionally and \texttt{b} by name,
+but allows the caller to omit both values:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:optional a #:key b)
+  (+ a b))
+\end{pygmented}
+
+Additionally, authors can define default values for arguments by providing 2-element lists
+instead of symbols:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:key (a 0) (b 0))
+  (+ a b))
+\end{pygmented}
+
+\textbf{History}
+
+The \texttt{optargs} module was introduced in version 1.3.2, released in 1999
+\parencite[][Section 9.1.4 "A Timeline of Selected Guile Releases"]{guile-manual}
+\parencite[][NEWS lines 11451-11525]{guile-source}. 
+At this time, Guile lacked a virtual machine and the module was implemented in pure
+scheme.
+This implementation operated by adding a prelude to the function definiton which searches
+through the values provided by the caller to decide which values should be assigned to
+which variables
+\parencite[][ice-9/optargs.scm]{guile-1.3.2}.
+The virtual machine was added to Guile in version 2.0.0, released in 2010
+\parencite[][Section 9.1.4 "A Timeline of Selected Guile Releases"]{guile-manual}
+\parencite[][NEWS lines 5068-5071]{guile-source}.
+This also entailed a rewrite of the \texttt{optargs} module which centered the
+implementation around the internal \texttt{<lambda-case>} strucure.
+This structure contains stores all the information about the different kinds of arguments
+accepted by the function and facilitates the use of special-purpose VM instructions for
+processing arguments efficiently
+\parencite[][2009-10 lines 6428-6453]{guile-devel-archive}.
+While the VM has gone through changes since then, including a complete rewrite in version
+2.2
+\parencite[][Section 9.1.4 "A Timeline of Selected Guile Releases"]{guile-manual},
+the \texttt{optargs} module has not meaningfully changed.
+The special-purpose VM instructions have been adapted to handle the details of VM
+operation correctly and decrease latency, but the core logic they use to process arguments
+has not changed.
+
+7c54029740a147a623c1f0564708d5471addf232 (Oct 03 2013) through
+553294d958c953f57658bad45affc15b55fcc471 (Nov 28 2013) - VM Rewrite
+
+df1cd5e59b38a7ecdb2184d7f0fed3f803969541 - (Oct 23 2009) Moves lambda* to psyntax
+4d3406a84750589ffa70669bb923343082efaeb5 - (Oct 23 2009) optargs rewrite
+a16d4e82e949954805bf2cd42cfbb519fcf4012d - (Apr 06 2013) Adds bind-kwargs
+1c33be992e8120abd20add8021e4d91d226f5b6a - (Nov 08 2013) Removes the "old VM"
+8e5755e7719b2bab69c509e4bf0ab2e8bcdc8a10 - (Jun 24 2018) Adds bind\_kwargs intrinsic.
+
+\subsection{Simple Function and Call}
+
+\begin{pygmented}[lang=lisp]
+(define (add-values a b)
+  (+ a b))
+
+(add-values 1000 1001)
+\end{pygmented}
+
+The bytecode
+\footnote{
+  I set the optimization level to 1, rather than the default of 2.
+  This is because the default optimization level notices that the calls to add-values
+  can be computed at compile-time and removes interesting bytecode.
+}
+generated for the call to \texttt{add-values} prepares for the function call by loading
+the function, loading the arguments, and dispatching to the function.
+The function load appears in the first three instructions.
+The first value in instructions 0-5 is a destination index into the stack.
+Instructions 0-2 load the \texttt{add-values} procedure into the beginning of the stack
+and instruction 3 moves it into index 5.
+Instructions 4-5 place the constant values into the 4th and 3rd indices.
+Finally, instruction 7 calls the function.
+This involves moving the frame pointer index 5 (where the procedure is stored) and the
+stack pointer to index 2 (the new end of the stack, which is smaller for the callee than
+for the caller).
+
+\begin{pygmented}[lang=lisp]
+0 (call-scm<-thread 0 62)         ;; current-module
+1 (static-ref 1 16322)            ;; add-values
+2 (call-scm<-scm-scm 0 0 1 111)   ;; lookup-bound
+3 (scm-ref/immediate 5 0 1)       
+4 (make-immediate 4 4002)         ;; 1000
+5 (make-immediate 3 4006)         ;; 1001
+6 (handle-interrupts)             
+7 (call 4 3)                      
+\end{pygmented}
+
+The bytecode for the function definition is similar but simpler.
+It loads the built-in function \texttt{add} (which corresponds to the \texttt{+} function)
+and calls it.
+It does not need to move the arguments onto the stack because they are already in the
+correct locations for calling a built-in function.
+
+\begin{pygmented}[lang=lisp]
+0 (call-scm<-scm-scm 7 6 5 0)     ;; add                at simple.scm:2:8
+1 (reset-frame 1)                 ;; 1 slot
+2 (handle-interrupts)             
+3 (return-values)                 
+\end{pygmented}
+
+\subsection{Caller Destructuring}
+Provided through the \texttt{apply} function. This allows a caller to provide
+a list which is destructured into a set of positional arguments.
+
+\subsubsection{Syntax \& Semantics}
+Destructuring in guile has a simple interface, as \texttt{apply} is simply a function
+takes in a function as the first value, then any number of arbitrary values, and requires
+a possibly empty list as the final value.
+For example, all of these are equivalent:
+
+\begin{pygmented}[lang=lisp]
+(add-values 3 4)
+(apply add-values 3 '(4))
+(apply add-values '(3 4))
+\end{pygmented}
+
+However, this would be an error because the final value is not a list:
+
+\begin{pygmented}[lang=lisp]
+(apply add-values 3 4)
+\end{pygmented}
+
+\subsubsection{Implementation}
+It operates by first collecting all of the positional arguments into a single list, with
+the final value as the tail of the list, and sending them to \texttt{scm\_call\_n}
+\parencite[][libguile/eval.c lines 585-622, lines 715-729]{guile-source}
+\footnote{
+  A typical guile programmer (such as myself) might be confused by the c-level API of the
+  apply function.
+  It takes 2 required arguments and a rest argument.
+  The apply function takes any number of arguments and requires that the final argument is
+  a list.
+  However, the body of the function simply calls \texttt{cons*} on the second required
+  argument and the rest argument; one might expect that this would cause the user-provided
+  list to be preserved instead of flattened.
+  However, when a c-level function is registered with a rest argument in guile it receives
+  an improper list of arguments, rather than the proper list provided when
+  \texttt{\#:rest} is given to \texttt{define*}.
+  See the file \texttt{examples/guile/c-gsubr-rest.scm} (and its corresponding c file) in
+  the paper's repository for a demonstration.
+  The reason for this discrepency is not clear but the API of \texttt{scm\_apply} makes
+  sense now.
+}.
+This function does the bulk of the work, such as creating a new frame, pushing arguments
+onto the stack, etc
+\parencite[][libguile/vm.c lines 1542-1621]{guile-source}.
+When a function is called statically from a compiled scheme file, the arguments are pushed
+at the colling site (as seen in the bytecode for the simple call) and the frame is
+prepared by VM primitives such as \texttt{call}
+\parencite[][libguile/vm-engine.c lines 428-461]{guile-source}
+ or \texttt{call-label}
+\parencite[][libguile/vm-engine.c lines 463-495]{guile-source}.
+
+\subsubsection{Historical Record}
+The notion of list destructuring with \texttt{apply} was included in the original paper
+defining the lisp programming language
+\parencite[][pages 189-190]{original-lisp-paper-pt-1}.
+This original definition took exactly 2 parameters, a function and a list containing the
+arguments.
+The second revised report on scheme extended this by allowing the caller to pass any
+number of values between the function and the list
+\parencite[][page 57]{r2rs}.
+
+Guile's original implementation did not have a virtual machine; it contained only an
+interpreter that worked with a literal representation of the program text
+\parencite[][Section 9.3.1 "Why a VM?"]{guile-manual}.
+The earliest commit in the current guile repository simply called the function after
+manually unpacking the arguments
+\parencite[][libguile/eval.c lines 1869-1985]{guile-first-commit}.
+With the release of Guile 2.0, which added the virtual machine
+\parencite[][NEWS lines 5068-5071]{guile-source},
+the \texttt{apply} function delegated to \texttt{scm\_call\_with\_vm}, a dedicated c-level
+helper function for calling scheme-level functions
+\parencite[][libguile/eval.c lines 782-802]{guile-2.0}.
+At this point, the VM was implemented as a C-level function which executed a single
+C-level function, so the end result was simply to call this function with the appropriate
+arguments
+\parencite[][libguile/vm.c lines 560-566, libguile/vm-engine.c lines 36-296]{guile-2.0}.
+This was replaced with the \texttt{scm\_call\_n} function as part of a refactoring which
+removed explicit references to the VM from many locations in C code as well as eliminating
+VM visibility from scheme code
+\parencite[][commit 165d9bf3a3bf34b53ed916743c6414f8030320c3 and earlier commits found
+with \texttt{git log libguile/eval.c}]{guile-source}.
+The reason for this change is not explicitly stated in the commit messages but is likely
+related to performance improvements attributed to a rewrite of the virtual machine in the
+Guile 2.2 release notes
+\parencite[][NEWS lines 1995-2004, 2124-2205]{guile-source}.
+
+\subsection{Author Destructuring}
+This feature is not provided by Guile.
+
+\subsection{Implicit Value}
+
+This feature is not provided by Guile.
+
+\subsection{Named Value}
+Provided through the \texttt{\#:key} arguments to \texttt{optargs} definitions.
+
+\subsubsection{Syntax \& Semantics}
+The caller must use the name specified by the author, which also be the name used by the
+local variable
+\footnote{
+	The caller uses a keyword to name the value while the author uses a symbol to name the
+	variable, as normal, but they both use the same name.
+}.
+When an author allows for a named value they also implicitly create a default value.
+Details about default values are described in the appropriate section; for the purpose of
+named values all we need to know is that if a caller omits a value then the local variable
+will be bound to \texttt{\#:false}.
+For example, an author of \texttt{add-values} could allow named values like this:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:key a b)
+  (+ (or a 0) (or b 0)))
+\end{pygmented}
+
+This function could be called in any of the following ways, with the result shown in the
+proceeding comment:
+
+\begin{pygmented}[lang=lisp]
+(add-values)             ; 0
+(add-values #:a 3)       ; 3
+(add-values #:b 3)       ; 3
+(add-values #:a 3 #:b 3) ; 6
+\end{pygmented}
+
+However, these would not be legal:
+
+\begin{pygmented}[lang=lisp]
+(add-values 3)
+(add-values 2 #:b 2)
+\end{pygmented}
+
+When an author specifies that a value \textit{can} be named this also means that it
+\textit{must} be named, if it is provided at all.
+
+Additionally, an author may specify that a caller can supply arbitrary named values which
+are not specified in the function signature (and not bound to a local variable).
+This is done by adding \texttt{\#:allow-other-keys} to the function signature.
+For example, a definition of \texttt{add-values} with this feature would allow all of
+the following calls to be legal, and they would all produce the value 6.
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:key (a 0) (b 0) #:allow-other-keys)
+  (+ (or a 0) (or b 0)))
+
+(add-values #:a 3 #:b 3)
+(add-values #:a 3 #:b 3 #:c 34)
+(add-values #:c 34 #:a 3 #:b 3)
+(add-values #:a 3 #:b 3 #:multiplier 88)
+\end{pygmented}
+
+\subsubsection{Implementation}
+
+When Guile compiles a procedure it stores the list of valid argument names next to the
+\texttt{SCM} object representing the code
+\parencite[][libguile/vm-engine.c lines 734, 736, 743-745;
+             libbugile/vm.c       lines 1003, 1008-1009]{guile-source}.
+\textbf{TODO: 6.7.3 is the scheme-level API for accessing procedure metadata}
+The body of the \texttt{add} function compiles to the following bytecode:
+
+\begin{pygmented}[lang=lisp]
+0  (bind-kwargs
+     1 0 1 3 16367)
+1  (alloc-frame 3)       ;; 3 slots
+2  (immediate-tag=?
+     1 4095 2308)        ;; undefined?
+3  (jne 2)               ;; -> L1
+4  (make-immediate 1 14) ;; 3
+  
+5  (immediate-tag=?
+     0 4095 2308)        ;; undefined?
+6  (jne 2)               ;; -> L2
+7  (make-immediate 0 4)  ;; #f
+
+8  (call-scm<-scm-scm
+      2 1 0 0)           ;; add
+9  (reset-frame 1)       ;; 1 slot
+10 (handle-interrupts)
+11 (return-values)
+\end{pygmented}
+
+The first instruction, \texttt{bind-kwargs} performs the bulk of the work required to
+process named values at runtime.
+First, it initializes all relevant local variables (eg, ones that have default values or
+are named) to the undefined value.
+Next, it walks through the list of non-positional arguments with the assumption that every
+even-indexed item is a keyword naming an argument
+\footnote{
+  Technically, it assumes that alternating value are keywords, except that it will
+  silently ignore a non-keyword if \texttt{\#:rest} is included in the procedure
+  definition.
+  However, I am currently focused on named values in isolation of other features.
+  \texttt{\#:rest} is discussed in the section on variadic functions.
+}
+It is an error if a value which should be a keyword is not or if a keyword does not name
+an argument, unless \texttt{\#:allow-other-keys} was specified.
+\parencite[][libguile/vm.c lines 977-1039]{guile-source}.
+The function's bytecode includes instructions to fill variables with their default values
+if they are not given an explicit value; this is discussed further in the section on
+default values (instructions 2-7).
+
+The bytecode for the call is largely similar to the simple call, except that it also
+pushes the keywords onto the stack:
+
+\begin{pygmented}[lang=lisp]
+(instrument-entry 16337)
+(assert-nargs-ee/locals 1 2)    ;; 3 slots (0 args)
+(static-ref 2 16332)            ;; #f
+(immediate-tag=? 2 7 0)         ;; heap-object?
+(je 9)                          ;; -> L1
+(static-ref 2 16299)            ;; #<directory (guile-user) 7d342b406c80>
+(static-ref 1 16291)            ;; sum
+(call-scm<-scm-scm 2 2 1 111)   ;; lookup-bound
+(static-set! 2 16321)           ;; #f
+
+(scm-ref/immediate 2 2 1)
+(make-immediate 1 14)           ;; 3
+(make-immediate 0 22)           ;; 5
+(handle-interrupts)
+(tail-call)
+\end{pygmented}
+
+\subsubsection{Historical Record}
+Named values were introduced with the original implementation of the \texttt{optargs}
+module \parencite[][NEWS lines 11451-11525]{guile-source}. 
+In the original implementation, the \texttt{let-ok-template} helper function generated a
+scheme-level \texttt{let} (or \texttt{let*}) form which initially binds each variable name
+to either the default value supplied by the author or a fresh undefined variable
+\parencite[][commit 7e01997e88c54216678271de36b1c2088377492d ice-9/optargs.scm lines 128-135]{guile-source}.
+The \texttt{bindfilter} local in the \texttt{let-keyword-template} helper replaced these
+initial values with the values supplied by the caller
+\parencite[][commit 7e01997e88c54216678271de36b1c2088377492d ice-9/optargs.scm lines 152-168]{guile-source}.
+
+The current implementation is largely the same, except that it takes advantage of
+being able to directly manipulate the VM state from C code instead of using macros to
+mutate code syntactically.
+The maintainers decided to move the implementation from scheme to C in order to decrease
+the latency associated with a function call that uses named values
+\parencite[][2009-10 lines 10053-10056, 14008-14009, 14139-14141]{guile-devel-archive}.
+
+A change which was technically made to the logic for named values is that they now
+receive an automatic default of \texttt{\#f} if the author did not supply a default value.
+However, this change was only necessary in the logic for named value because Guile
+conflates named values and default values.
+This history of the change to default values is discussed in the appropriate section.
+
+Another change, which may or may not be considered a bug fix, has to do with the way that
+Guile processes named values when the function also contains a variadic variable.
+Originally, Guile required that all named values precede all (other) variadic values.
+This was changed so that variadic value may be intermingled with named values, so long
+as variadic values are not keywords (unless \texttt{\#:allow-other-keys} is set, in which
+case they may be keywords)
+\parencite[][commit ff74e44ecba55f50b2c2c84bad2f13bed9489455]{guile-source}.
+
+\subsection{Default Value}
+Provided through both \texttt{\#:optional} and \texttt{\#:key}.
+The semantics of \texttt{\#:key} are explained in the named values section, and do not
+meaningfully differ from \texttt{\#:optional} for the purpose of specifying default
+values.
+This section will only discuss \texttt{\#:optional}.
+
+\subsubsection{Syntax \& Semantics}
+The default value for an argument can either be specified or unspecified.
+If it is unspecified it is \texttt{\#false}.
+Arguments become associated with a default value by placing them after the
+\texttt{\#:optional} keyword in a \texttt{define*} form.
+This verison of \texttt{add-values} demonstrates use of default values without
+specification.
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:optional a b)
+  (+ (or a 0) (or b 0)))
+\end{pygmented}
+
+This function adds the given values, using a default of \texttt{0} if one or both values
+are missing.
+The author can specify an alternative default value in the function signature by
+specifying the argument with a list instead of a symbol.
+The first element is the symbol naming the local variable and the second element is the
+default value.
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values #:optional (a 0) (b 0))
+  (+ a b))
+\end{pygmented}
+
+This version is semantically equivalent to the first.
+
+\subsubsection{Implementation}
+The bytecode for calling a function using default values does not differ from the bytecode
+for the simple call.
+
+The bytecode for the function definition differs significantly.
+I will start with the bytecode for the function which includes default values in the
+signature as this version is simpler:
+
+\begin{pygmented}[lang=lisp]
+0  (bind-optionals 3)              ;; 2 args
+1  (alloc-frame 8)                 ;; 8 slots
+2  (immediate-tag=? 6 4095 2308)   ;; undefined?
+3  (jne 2)                         ;; -> L1
+4  (make-immediate 6 2)            ;; 0
+L1:
+5  (immediate-tag=? 5 4095 2308)   ;; undefined?
+6  (jne 2)                         ;; -> L2
+7  (make-immediate 5 2)            ;; 0
+L2:
+8  (call-scm<-scm-scm 7 6 5 0)     ;; add
+9  (reset-frame 1)                 ;; 1 slot
+10 (handle-interrupts)
+11 (return-values)
+\end{pygmented}
+
+The first instruction, \texttt{bind-optionals} checks if the caller omitted any argument
+values.
+If so, it fills in the associated variables with the undefined value
+\parencite[][libguile/vm-engine.c lines 3213-3233]{guile-source}.
+The next 2 sections (instructions 2-4 and 5-7) check whether or not the optional values
+are undefined; if so, they are filled with the default value specified by the author.
+Finally, instructions 8-11 call the \texttt{add} function and return it's value
+identically to the simple call.
+
+The version which does not specify default values in the signature is similar.
+It also calls \texttt{bind-optionals} (instruction 0) then fills in a default value if
+any of the arguments are undefined (instructions 2-7).
+However, in this case the default value is \texttt{\#:false}.
+The next two sections check the argument values a second time and replace the argument
+value with \texttt{0} if it was false (instructions 8-14).
+Finally, call the \texttt{add} function and return it's value identically to the simple
+call (instructions 15-18).
+
+\begin{pygmented}[lang=lisp]
+0  (bind-optionals 3)              ;; 2 argss
+1  (alloc-frame 3)                 ;; 3 slots
+2  (immediate-tag=? 1 4095 2308)   ;; undefined?         at ice-9/psyntax.scm:1849:37
+3  (jne 2)                         ;; -> L1
+4  (make-immediate 1 4)            ;; #f
+L1:
+5  (immediate-tag=? 0 4095 2308)   ;; undefined?
+6  (jne 2)                         ;; -> L2
+7  (make-immediate 0 4)            ;; #f
+L2:
+8  (immediate-tag=? 1 3839 4)      ;; false?             at default-value.scm:2:11
+9  (jne 2)                         ;; -> L3
+10 (make-immediate 1 2)            ;; 0                  at default-value.scm:2:17
+11 L3:
+12 (immediate-tag=? 0 3839 4)      ;; false?             at default-value.scm:2:20
+13 (jne 2)                         ;; -> L4
+14 (make-immediate 0 2)            ;; 0                  at default-value.scm:2:26
+L4:
+15 (call-scm<-scm-scm 2 1 0 0)     ;; add                at default-value.scm:2:8
+16 (reset-frame 1)                 ;; 1 slot
+17 (handle-interrupts)             
+18 (return-values)                 
+\end{pygmented}
+
+\subsubsection{Historical Record}
+Default values were included in the original \texttt{optargs} implementation
+\parencite[][NEWS lines 11451-11525]{guile-source}. 
+The semantics at that time were nearly identical to the current semantics.
+The one notable difference is that, in the case where the author does not define a
+default value and the caller does not supply one, the variable was not bound to any value.
+This was changed as part of merging a branch that was mostly concerned with how modules
+are handled.
+I was unable to find any record about the reason why this change was made
+\footnote{
+	Marius Vollmer, the developer who authored the commit, was very kind in responding to an
+	email enquiring about this.
+	Unfortunately it has been more than 2 decades since the change was made and it was not
+	notable enough to warrant a place in permanent memory.
+}
+\parencite[][commit 296ff5e78b8322fe4bf00c5ec1497dc28da776b8]{guile-source}
+\parencite[][2001-05 lines 11305-11313]{guile-devel-archive}.
+This was included in the 1.8 release series first released in 2006
+\parencite[][Section 9.1.4 "A Timeline of Selected Guile Releases"]{guile-manual}
+\footnote{
+	I infer that it was first added in 1.8 because commit
+	296ff5e78b8322fe4bf00c5ec1497dc28da776b8, which implements the change, is between
+	commit 0f24e75b73b9c0c745971de639a53748a395a1cb, which bumps the numbers in
+	GUILE-VERSION from 1.7 to 1.9 (guile uses odd numbers for development versions and even
+	numbers for release versions) and commit c299f186ff9693fc88859daef037e3d94cc7c0ff, which
+	adds content to the NEWS file regarding changes new in 1.6
+	However, I did not find any content in the NEWS file which discusses the change
+	(including in more recent release notes).
+}.
+
+\subsection{Positional Value}
+Provided as the default mechanism for mapping values to arguments.
+
+\subsubsection{Syntax \& Semantics}
+Positional values are provided by a space-separated list of values following the function
+name.
+The bytecode for both calls and definitions is identical to the simple call.
+
+\subsubsection{Implementation}
+Guile does not enforce a restriction that values can only be supplied positionally.
+This is because, technically, all values are always supplied positionally.
+When a caller provides named values they are actually providing pairs of values: keywords
+as names and arbitrary values as values.
+For example, given this call it is impossible to say whether the caller is supplying
+named values or positional values:
+
+\begin{pygmented}[lang=lisp]
+(make-dictionary #:first "one" #:second "two" #:third "three")
+\end{pygmented}
+
+This could be a valid call to a function with named values:
+
+\begin{pygmented}[lang=lisp]
+(define* (make-dictionary #:key first second third)
+  (let ((result (make-hash-table)))
+    (hash-set! result #:first  first)
+    (hash-set! result #:second second)
+    (hash-set! result #:third  third)
+    result))
+\end{pygmented}
+
+Or it could be a valid call to a function which takes 6 positional values:
+
+\begin{pygmented}[lang=lisp]
+(define* (make-dictionary key0 val0 key1 val1 key2 val2)
+  (let ((result (make-hash-table)))
+    (hash-set! result key0 val0)
+    (hash-set! result key1 val1)
+    (hash-set! result key2 val2)
+    result))
+\end{pygmented}
+
+From the perspective of this particular caller, it is impossible to determine which
+implementation is in use without inspecting the code
+\footnote{
+	Of course, a caller who wanted to use different keywords in their dictionary would
+	notice the difference between these implmentations very quickly!
+}.
+
+\subsubsection{Historical Record}
+The Scheme standard requires that implementations accept value positionally.
+This has been true since the original paper describing lisp
+\parencite[][pages 185-186]{original-lisp-paper-pt-1}.
+The stated motivation is to distinguish between "functions" and "forms".
+A function is the abstract idea of a formula that can have concrete numbers applied to it.
+Traditionally, a form is syntactically identical to a formula, but it is meant to be a
+stand-in for whatever value the formula will resolve to in context.
+The exact syntax is taken from a previous work which had a similar concern, and does not
+explicitly justify the postional notation
+\parencite[][pages 3-7]{calculi-of-lambda-conversion}
+\footnote{
+	The decision to supply arguments positionally appears to derive from prior work
+	describing multi-argument functions as a series of functions which take in one of the
+	values and call the "next" function which will receieve the "next" value (this is
+	similar to the concept of currying used in some programming languages).
+	With this model, it is natural to write values positionally as they must be provided in
+	the correct order to ensure that each partial function operates correctly.
+	It's also worth noting that the examples of functions used in the paper are relatively
+	simple - they are all inlinable with the prose.
+	In the face of such simplicity, naming values would be verbose without much benefit.
+}.
+
+While the semantics of positional arguments have remained the same, the implementation
+has changed significantly.
+In the oldest version of Guile available through source control, values are given to
+a function by collecting them into a list, then dispatching based on the number of
+values expected by the function
+\parencite[][libguile/eval.c lines 1822-2004]{guile-first-commit}.
+With the addition of the VM, values are given by putting them into a frame managed by the
+VM (eg, not a C-level frame), avoiding the need to create a list unless the function is
+variadic.
+
+\subsection{Typed Value}
+This feature is provided by defining methods in the Guile Object-Oriented Programming
+System (GOOPS).
+
+\subsubsection{Syntax \& Semantics}
+In GOOPS, methods are not contained within classes.
+Instead, they are simply functions with type specifications.
+When an author defines a method, they can choose to specify a type by providing a
+two-element list in place of an argument name
+\parencite[][Section 8.6 "Methods and Generic Functons"]{guile-manual}.
+The first element of the list is the argument name and the second element is the class
+name.
+For example:
+
+\begin{pygmented}[lang=lisp]
+(define-method (add-values (a <number>) (b <number>))
+  (+ a b))
+\end{pygmented}
+
+This defines a method that will only be executed when it is called with exactly two
+arguments which are both numbers.
+The author can also define alternative implementations for different types\footnote{
+	While overloading is generally out of scope for this paper, the implementation section
+	will not make sense without mentioning it.
+}:
+
+\begin{pygmented}[lang=lisp]
+(define-method (add-values (a <list>) (b <list>))
+  (append a b))
+\end{pygmented}
+
+\parencite[][module/oop/goops.scm]{guile-source}
+
+\subsubsection{Implementation}
+\textit{
+	NOTE:
+	In most implementation sections I present the bytecode associated with a function
+	definition and call and describe the low-level semantics.
+	This would not be useful for this section.
+	The GOOPS implementation is primarily concerned with function overloading, not with
+	type checking.
+	Most of the logic is related to checking the arity of the function and searching for
+	the function with the "best fit" type signature (that is, it prefers more specific
+	child classes over more general parent classes).
+	The fact that it will produce an error if the user supplies invalid types appears to be
+	incidental to the system, not a primary purpose.
+	In order to avoid a drawn-out explanation which would not be relevant to this paper, I
+	refer only to the source implementation which is relevant to type-checking.
+}
+
+Defining a method defines two separate function: a generic which is responsible for method
+dispatching and the method which contains the body that the author defined
+\parencite[][Section 8.6 "Methods and Generic Functons"]{guile-manual}.
+A generic is an applicable struct (a structure which can be called like a function) which
+store all methods which share a name
+\parencite[][module/oop/goops.scm lines 2045-2065]{guile-source}.
+When a caller uses that name with some arguments, the generic object searches all of the
+methods associated with that name for a matching signature
+\parencite[][module/oop/goops.scm lines 1381-1449]{guile-source}.
+
+The bytecode for calling a function with typed values is identical to the simple call.
+
+\subsubsection{Historical Record}
+GOOPS is based on the STklos and CLOS, the object systems for STK and Common Lisp
+respectively.
+\parencite[][Section 8.0 "GOOPS"]{guile-manual}.
+
+\subsection{Variadic Function}
+Provided by the "dotted list" syntax and the \texttt{\#:rest} keyword in a
+\texttt{lambda*}.
+
+\subsubsection{Syntax \& Semantics}
+The \texttt{\#:rest} syntax allows an author to define a variadic variable that will
+contain a (possibly empty) list of variadic values.
+The variadic variable must be declared after all other declarations.
+For example, this definition and call would have the following value
+\footnote{
+	As the variadic variable contains a list, the below code uses \texttt{apply} to
+	destructure the list.
+	This is described in detail in the section on caller destructuring.
+}:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values a b #:rest variadic-variable)
+	(apply + a b variadic-variable)
+
+(add-values 1000 2001 1002 2003)
+; 6006
+\end{pygmented}
+
+The dotted list syntax is similar, except that the author uses a single period instead of
+the \texttt{\#:rest} keyword and this syntax works without \texttt{optargs}:
+
+\begin{pygmented}[lang=lisp]
+(define* (add-values a b . variadic-variable)
+	(apply + a b variadic-variable)
+
+(add-values 1000 2001 1002 2003)
+; 6006
+\end{pygmented}
+
+Other than this syntactic difference, the two methods of defining a variadic function are
+identical.
+
+\subsubsection{Implementation}
+For definitions, the only notable difference from the simple function is the addition of
+the \texttt{bind-rest} instruction near the beginning of the body.
+This instruction simply checks if there are any variadic values and sets the appropriate
+stack location to a list containing them (if there are) or an empty list (if there are
+not)
+\parencite[][libguile/vm-engine.c lines 756-783,
+             libguile/vm.c        lines 1041-1052]{guile-source}.
+
+For calls, the bytecode is identical to the simple call.
+
+\subsubsection{Historical Record}
+The dotted list syntax was first described in the Second Revised Report on Scheme
+\parenciet[][page 13]{r2rs}.
