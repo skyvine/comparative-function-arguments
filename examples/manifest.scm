@@ -9,9 +9,11 @@
         "gdb"
         "glibc"
         "guile"
+        "guile-readline"
         "info-reader"
         "make"
         "man-db"
         "python-next"
         "rust"
+        "the-silver-searcher"
         "util-linux"))
