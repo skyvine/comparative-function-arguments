@@ -350,6 +350,62 @@ This will generalize the features provided by various languages, allowing progra
 use the set of features that make sense given the context they are working in without
 needing to change the language that they are programming in.
 
+\subsection{Practical Applications}
+While the theoretical problems with the term "argument" compel me to investigate this
+phenomenon, some people might ask whether this actually makes a difference to people who
+are working on computers to achieve practical ends.
+A good question!
+As you might have guessed from the presence of this paragraph, this does have implications
+for practical work.
+My initial intuition that this is practically useful comes from the ubiquity of function
+calls in all programs across different programming paradigms.
+Even in object-oriented programming, a significant portion of lines of code consist of
+function calls.
+Any improvement to the function call interface will have an outsized effect on developers
+due to the sheer volume of function calls we have to deal with.
+Additionally, my intuition is backed by observing the industry, including which
+technologies gain and maintain popularity as well as the way people interact with them.
+
+Consider the way that bash commonly processes arguments.
+It is often the case that a caller can supply different values for the same argument in
+the same call, with the values that are syntactically later overriding the was that are
+syntactically earlier.
+When working on a command line this can be useful.
+If the caller wants to re-run a command but change one argument they do not need to
+navigate through the invocation and edit the correct spot; instead, they can add a new
+value onto the end of the call to get the desired behavior.
+In an interactive setting where the mental flow of the caller is of the utmost importance
+this feature is useful.
+However, it would be considered bad form to do this inside of a shell script.
+While Bash technically allows this to happen, as it is a prompt-first language, other
+popular languages such as Python which is a script-first language disallow this behavior.
+There is no "right answer" as to whether or not the language should allow this: it is a
+question of context.
+This paper will define semnatics like this as metadata associated with arugments: metadata
+which can be interpreted differently or changed completely by tools specialized for
+specific contexts (for example, an interpreter could behave differently if it is given a
+script on the command-line compared to when it is running an interactive session).
+
+The contextual differences extend to social settings as well.
+For example, as we will see in the section on Python it is possible for an author to
+specify that some values cannot be given by name (by default, callers may choose whether
+to pass values by position or name freely).
+One of the justifications given for this is that it simply does not make sense to use
+names for some functions in any context.
+The example given is a casting funciton with the signature \texttt{as\_my\_type(x)}.
+Here, they argue, it will never make sense to use the name \texttt{x} because it does not
+provide any meaning.
+However, a teacher in a Programming 101 class might decide that they want to name all
+values in their code examples and assignments, so that the code is clearer for people who
+are learning to program for the first time.
+While they could omit the name for some simple functions such as \texttt{as\_my\_type}
+this adds conceptual complication to the material: now students must switch between
+processing positional values and named values on a case-by-case basis, or else
+completely abandon named values.
+By specifying these restrictions through accessible metadata, the teacher could simply
+remove this restriction for the purpose of their class without disturbing the upstream
+project.
+
 \subsection{Reproducibility and Transparency}
 
 The source code used in example snippets can be found in the online git repository located
