@@ -76,7 +76,7 @@ the beginning of the frame, where each frame represents a single function call.
 The stack pointer keeps track of the end of the stack, like a pointer to the end of an
 array
 \parencite[][Section 9.3.3]{guile-manual}.
-When instructions take an index, they differ in whether they take in and index relative to
+When instructions take an index, they differ in whether they take in an index relative to
 the stack pointer or the frame pointer
 \parencite[][Section 9.3.5]{guile-manual}.
 This paper will always reference indexes relative to the stack pointer for the sake of
@@ -224,10 +224,10 @@ for the caller).
 \end{pygmented}
 
 The bytecode for the function definition is similar but simpler.
-It loads the built-in function \texttt{add} (which corresponds to the \texttt{+} function)
-and calls it.
-It does not need to move the arguments onto the stack because they are already in the
-correct locations for calling a built-in function.
+It calls the built-in function \texttt{add} (which corresponds to the \texttt{+}
+function).
+Because \texttt{add} is a built-in function, it does not need to be loaded or placed on
+the stack, and its arguments can come from any stack location.
 
 \begin{pygmented}[lang=lisp]
 0 (call-scm<-scm-scm 7 6 5 0)     ;; add                at simple.scm:2:8
