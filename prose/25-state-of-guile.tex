@@ -55,63 +55,11 @@ For example, one can add 3 numbers in lisp with this expression:
 (+ 0 1 2)
 \end{pygmented}
 
-Furthermore, lisp languages ensure that all program text can be represented as valid code
-objects.
-For example, when discussing the example \texttt{add-values} function throughout this
-paper, I might refer to the variables by their textual representations "a" and "b".
-In many languages these textual representations are not associated with distinct code
-objects that can be manipulated by the programming language itself.
-Macro systems and code generation tools typically try to address this deficiency by
-directly manipulating the textual representation before it is given to the compiler and/or
-interpreter.
-\textbf{TODO: This doesn't seem entirely fair. Rust macros, Python strings, etc. Do I even
-need to talk about this or am I just stanning?}
-Lisp languages instead provide a direct representation of variable names, which are called
-symbols.
-A symbol can be represented in lisp by prefixing a variable name with a single quotation
-mark:
-
-\begin{pygmented}[lang=lisp]
-(class-of 'example)
-; result: #<<class> <symbol> 7f8540a21000>
-\end{pygmented}
-
-Additionally, if a paranthesized list is prefixed with a quotation mark the contents are
-treated as a literal list instead of a fuction call:
-
-\begin{pygmented}[lang=lisp]
-(add-values 1000 1001)
-; result: 2001
-
-'(add-values 1000 1001)
-; result: '(add-values 1000 1001)
-\end{pygmented}
-
-All lisp dialects share these common features
-\footnote{
-  This is not an exhaustive list of lisp-language features, nor am I aware of a definitive
-  list of features "required to be a lisp".
-  An attempt to create one would be... ill-advised. =)
-}.
-
-A dialect of lisp determines which primitives exist in the language.
-For example, the scheme dialect states that \texttt{define} can be used to create a
-function like this:
-
-\begin{pygmented}[lang=lisp]
-(define (add-values a b)
-  (+ a b))
-\end{pygmented}
-
-Guile is an implementation of scheme, so it provides the requirements given by the
-standard.
-It also extends scheme with unique fuctionality such as additional functions designed for
-operating on Linux systems.
 It implements a compiler which produces bytecode, an interpreter which executes bytecode,
 and an interpreter which directly executes program text
 \parencite[][modules/language/scheme/spec.scm lines 43-45]{guile-source}.
-This paper will generally focus on compiled bytecode as this keeps the analysis consistent
-with other sections and is the typical way to execute Guile code\footnote{
+This paper will focus on compiled bytecode as this keeps the analysis consistent with
+other sections and is the typical way to execute Guile code\footnote{
   For example, running \texttt{guile script-name} will first compile the script then run
   the compiled file rather than running the script directly.
 }.
