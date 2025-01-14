@@ -189,9 +189,8 @@ a16d4e82e949954805bf2cd42cfbb519fcf4012d - (Apr 06 2013) Adds bind-kwargs
 
 The bytecode
 \footnote{
-  I set the optimization level to 1, rather than the default of 2.
-  This is because the default optimization level notices that the calls to add-values
-  can be computed at compile-time and removes interesting bytecode.
+	The partial-evaluation optimization was turned off for all of the samples given here.
+	This is because partial evaluation reduces the entire program to a single number.
 }
 generated for the call to \texttt{add-values} prepares for the function call by loading
 the function, loading the arguments, and dispatching to the function.
