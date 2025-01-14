@@ -99,7 +99,6 @@ In plain scheme, functions are defined like this:
 The function's name is \texttt{add-value} and the arguments are \texttt{a} and \texttt{b}.
 Callers can only call the function by providing positional values for every argument:
 
-
 \begin{pygmented}[lang=lisp]
 (add-values 2001 2002)
 ;; results in 3003
@@ -200,7 +199,7 @@ Instructions 4-5 place the constant values into the 4th and 3rd indices.
 Instruction 6 can be safely ignored; it handles events like signals from the operating
 system.
 Finally, instruction 7 calls the function.
-This involves moving the frame pointer index 5 (where the procedure is stored) and the
+This involves moving the frame pointer to index 5 (where the procedure is stored) and the
 stack pointer to index 2 (the new end of the stack, which is smaller for the callee than
 for the caller).
 
@@ -218,11 +217,11 @@ for the caller).
 The bytecode for the function definition is similar but simpler.
 It calls the built-in function \texttt{add} (which corresponds to the \texttt{+}
 function).
-Because \texttt{add} is a built-in function, it does not need to be loaded or placed on
-the stack, and its arguments can come from any stack location.
+Because \texttt{add} is a built-in function it does not need to be loaded or placed on
+the stack and its arguments can come from any stack location.
 
 \begin{pygmented}[lang=lisp]
-0 (call-scm<-scm-scm 7 6 5 0)     ;; add                at simple.scm:2:8
+0 (call-scm<-scm-scm 7 6 5 0)     ;; add
 1 (reset-frame 1)                 ;; 1 slot
 2 (handle-interrupts)             
 3 (return-values)                 
@@ -251,12 +250,14 @@ However, this would be an error because the final value is not a list:
 \end{pygmented}
 
 \subsubsection{Implementation}
-It operates by first collecting all of the positional arguments into a single list, with
-the final value as the tail of the list, and sending them to \texttt{scm\_call\_n}
+\texttt{Apply} operates by first collecting all of the positional arguments into a single
+list, with the final value as the tail of the list, and sending them to
+\texttt{scm\_call\_n}
 \parencite[][libguile/eval.c lines 585-622, lines 715-729]{guile-source}
 \footnote{
-  A typical guile programmer (such as myself) might be confused by the c-level API of the
-  apply function.
+  A typical guile programmer (such as myself) who is familiar with the dotted list syntax
+  or the \texttt{\#:rest} argument (both described in the section on variadic functions)
+  might be confused by the c-level API of the apply function.
   It takes 2 required arguments and a rest argument.
   The apply function takes any number of arguments and requires that the final argument is
   a list.
@@ -271,15 +272,10 @@ the final value as the tail of the list, and sending them to \texttt{scm\_call\_
   The reason for this discrepency is not clear but the API of \texttt{scm\_apply} makes
   sense now.
 }.
-This function does the bulk of the work, such as creating a new frame, pushing arguments
-onto the stack, etc
-\parencite[][libguile/vm.c lines 1542-1621]{guile-source}.
-When a function is called statically from a compiled scheme file, the arguments are pushed
-at the colling site (as seen in the bytecode for the simple call) and the frame is
-prepared by VM primitives such as \texttt{call}
-\parencite[][libguile/vm-engine.c lines 428-461]{guile-source}
- or \texttt{call-label}
-\parencite[][libguile/vm-engine.c lines 463-495]{guile-source}.
+This function is responsible for setting up the VM stack correctly
+\parencite[][libguile/vm.c lines 1542-1621]{guile-source},
+a task which would normally be handled by the \texttt{call} instruction
+\parencite[][libguile/vm-engine.c lines 428-461]{guile-source}.
 
 \subsubsection{Historical Record}
 The notion of list destructuring with \texttt{apply} was included in the original paper
