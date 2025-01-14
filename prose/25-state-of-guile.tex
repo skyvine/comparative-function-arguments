@@ -194,11 +194,11 @@ The bytecode
 }
 generated for the call to \texttt{add-values} performs the function call by loading
 the function, loading the arguments, and dispatching to the function.
-The function load appears in the first three instructions.
-The first value in instructions 0-5 is a destination index into the stack.
 Instructions 0-2 load the \texttt{add-values} procedure into the beginning of the stack
 and instruction 3 moves it into index 5.
 Instructions 4-5 place the constant values into the 4th and 3rd indices.
+Instruction 6 can be safely ignored; it handles events like signals from the operating
+system.
 Finally, instruction 7 calls the function.
 This involves moving the frame pointer index 5 (where the procedure is stored) and the
 stack pointer to index 2 (the new end of the stack, which is smaller for the callee than
