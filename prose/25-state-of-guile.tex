@@ -367,7 +367,12 @@ When an author specifies that a value \textit{can} be named this also means that
 
 Additionally, an author may specify that a caller can supply arbitrary named values which
 are not specified in the function signature (and not bound to a local variable).
-This is done by adding \texttt{\#:allow-other-keys} to the function signature.
+This is done by adding \texttt{\#:allow-other-keys}
+\footnote{
+	Ironically, while the optargs module does not support implicit values for user-defined
+	code, \texttt{\#:allow-other-keys} is itself an implicit value.
+}
+to the function signature.
 For example, a definition of \texttt{add-values} with this feature would allow all of
 the following calls to be legal, and they would all produce the value 6.
 
