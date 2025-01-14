@@ -116,35 +116,28 @@ semantics are identical:
 
 Authors can change the semantics by adding keywords to the function signature.
 Keywords modify all following arguments, until a different keyword is reached.
-For example, this definition allows callers to omit the values of either \texttt{a} or
-\texttt{b} (in which case the value \texttt{\#false} will be used), but still requires
-them to be supplied positionally (if they are supplied at all):
+For example, this definition marks both \texttt{a} and \texttt{b} as "optional arguments",
+which are described in the section on default values:
 
 \begin{pygmented}[lang=lisp]
 (define* (add-values #:optional a b)
   (+ a b))
 \end{pygmented}
 
-This one also allows their values to be omitted, but requires them to be supplied by name:
+This one marks both as "keyword arguments", which are described in the section on named
+values:
 
 \begin{pygmented}[lang=lisp]
 (define* (add-values #:key a b)
   (+ a b))
 \end{pygmented}
 
-This one also allows both values to be omitted, but requires \texttt{a} to be supplied
-positionally and \texttt{b} to be supplied by name:
+This one marks \texttt{a} as an optional argument and \texttt{b} as a keyword argument.
+Note that \texttt{b} is \textit{not} an optional argument; it is only a keyword argument
+(though as you will see in the following sections, their semantics partially overlap):
 
 \begin{pygmented}[lang=lisp]
 (define* (add-values #:optional a #:key b)
-  (+ a b))
-\end{pygmented}
-
-Additionally, authors can define default values for arguments by providing 2-element lists
-instead of symbols:
-
-\begin{pygmented}[lang=lisp]
-(define* (add-values #:key (a 0) (b 0))
   (+ a b))
 \end{pygmented}
 
