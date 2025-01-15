@@ -435,21 +435,18 @@ The bytecode for the call is largely similar to the simple call, except that it 
 pushes the keywords onto the stack:
 
 \begin{pygmented}[lang=lisp]
-(instrument-entry 16337)
-(assert-nargs-ee/locals 1 2)    ;; 3 slots (0 args)
-(static-ref 2 16332)            ;; #f
-(immediate-tag=? 2 7 0)         ;; heap-object?
-(je 9)                          ;; -> L1
-(static-ref 2 16299)            ;; #<directory (guile-user) 7d342b406c80>
-(static-ref 1 16291)            ;; sum
-(call-scm<-scm-scm 2 2 1 111)   ;; lookup-bound
-(static-set! 2 16321)           ;; #f
-
-(scm-ref/immediate 2 2 1)
-(make-immediate 1 14)           ;; 3
-(make-immediate 0 22)           ;; 5
+(call-scm<-thread 7 62)         ;; current-module
+(static-ref 6 16329)            ;; sum
+(call-scm<-scm-scm 7 7 6 41)    ;; define!
+(make-non-immediate 6 16327)    ;; #<procedure sum (#:key a b)>
+(scm-set!/immediate 7 1 6)      
+(static-ref 3 16338)            ;; #:a
+(make-immediate 2 34)           ;; 8
+(static-ref 1 16347)            ;; #:b
+(make-immediate 0 38)           ;; 9
+(make-immediate 4 4)            ;; #f
 (handle-interrupts)
-(tail-call)
+(call-label 3 5 8)              ;; sum at #x7f308dda2158
 \end{pygmented}
 
 \subsubsection{Historical Record}
