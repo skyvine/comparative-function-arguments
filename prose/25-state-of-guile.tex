@@ -4,12 +4,15 @@
 \begin{itemize}
   \item{Historical record of GOOPS}
   \item{Talk about lambda-case in background}
+  \item{Explain distinction between Guile, Scheme, and C}
   \item{Discuss rNrs in background \& particularly r2rs}
   \item{Remove most of the words from the background section...}
   \item{Figure out GOOPS bytecode}
   \item{Fix citation to manual to properly cite info manual instead of repo url}
   \item{Figure out citation for devel archive}
   \item{Double-check bytecode samples are still correct after aux refactoring}
+  \item{Normalize casing of "c-level"}
+	\item{Normalize bytecode explanations (refer to specific instruction numbers)}
 \end{itemize}
 }
 
@@ -299,7 +302,8 @@ the \texttt{apply} function delegated to \texttt{scm\_call\_with\_vm}, a dedicat
 helper function for calling scheme-level functions
 \parencite[][libguile/eval.c lines 782-802]{guile-2.0}.
 At this point, the VM was implemented as a C-level function which executed a single
-C-level function, so the end result was simply to call this function with the appropriate
+C-level function \textbf{TODO: I'm not sure if this sentence is worded confusingly enough
+yet...}, so the end result was simply to call this function with the appropriate
 arguments
 \parencite[][libguile/vm.c lines 560-566, libguile/vm-engine.c lines 36-296]{guile-2.0}.
 This was replaced with the \texttt{scm\_call\_n} function as part of a refactoring which
@@ -323,13 +327,13 @@ This feature is not provided by Guile.
 Provided through the \texttt{\#:key} arguments to \texttt{optargs} definitions.
 
 \subsubsection{Syntax \& Semantics}
-The caller must use the name specified by the author, which also be the name used by the
-local variable
+The caller must use the name specified by the author, which will also be the name used by
+the local variable
 \footnote{
 	The caller uses a keyword to name the value while the author uses a symbol to name the
 	variable, as normal, but they both use the same name.
 }.
-When an author allows for a named value they also implicitly create a default value.
+When an author mandates a named value they also implicitly create a default value.
 Details about default values are described in the appropriate section; for the purpose of
 named values all we need to know is that if a caller omits a value then the local variable
 will be bound to \texttt{\#:false}.
@@ -361,7 +365,8 @@ When an author specifies that a value \textit{can} be named this also means that
 \textit{must} be named, if it is provided at all.
 
 Additionally, an author may specify that a caller can supply arbitrary named values which
-are not specified in the function signature (and not bound to a local variable).
+are not specified in the function signature (and not bound to a local variable, unless
+the function is also variadic).
 This is done by adding \texttt{\#:allow-other-keys}
 \footnote{
 	Ironically, while the optargs module does not support implicit values for user-defined
@@ -476,7 +481,7 @@ This history of the change to default values is discussed in the appropriate sec
 Another change, which may or may not be considered a bug fix, has to do with the way that
 Guile processes named values when the function also contains a variadic variable.
 Originally, Guile required that all named values precede all (other) variadic values.
-This was changed so that variadic value may be intermingled with named values, so long
+This was changed so that variadic values may be intermingled with named values, so long
 as variadic values are not keywords (unless \texttt{\#:allow-other-keys} is set, in which
 case they may be keywords)
 \parencite[][commit ff74e44ecba55f50b2c2c84bad2f13bed9489455]{guile-source}.
@@ -555,8 +560,8 @@ any of the arguments are undefined (instructions 2-7).
 However, in this case the default value is \texttt{\#:false}.
 The next two sections check the argument values a second time and replace the argument
 value with \texttt{0} if it was false (instructions 8-14).
-Finally, call the \texttt{add} function and return it's value identically to the simple
-call (instructions 15-18).
+Finally, it calls the \texttt{add} function and returns it's value identically to the
+simple call (instructions 15-18).
 
 \begin{pygmented}[lang=lisp]
 0  (bind-optionals 3)              ;; 2 argss
