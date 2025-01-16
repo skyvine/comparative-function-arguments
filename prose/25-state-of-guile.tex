@@ -475,13 +475,7 @@ The maintainers decided to move the implementation from scheme to C in order to 
 the latency associated with a function call that uses named values
 \parencite[][2009-10 lines 10053-10056, 14008-14009, 14139-14141]{guile-devel-archive}.
 
-A change which was technically made to the logic for named values is that they now
-receive an automatic default of \texttt{\#f} if the author did not supply a default value.
-However, this change was only necessary in the logic for named value because Guile
-conflates named values and default values.
-This history of the change to default values is discussed in the appropriate section.
-
-Another change, which may or may not be considered a bug fix, has to do with the way that
+One change, which may or may not be considered a bug fix, has to do with the way that
 Guile processes named values when the function also contains a variadic variable.
 Originally, Guile required that all named values precede all (other) variadic values.
 This was changed so that variadic values may be intermingled with named values, so long
