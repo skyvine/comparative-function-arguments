@@ -2,7 +2,7 @@
 
 \textbf{TODO:
 \begin{itemize}
-  \item{Historical record of GOOPS}
+  \item{Historical record of GOOPS & variadic functions}
   \item{Talk about lambda-case in background (maybe, this is an intermediate representation which I considered out-of-scope for Python)}
   \item{Either include bytecode in the destructuring section or explain why you don't}
   \item{Explain distinction between Guile, Scheme, and C}
@@ -621,12 +621,11 @@ This was included in the 1.8 release series first released in 2006
 Provided as the default mechanism for mapping values to arguments.
 
 \subsubsection{Syntax \& Semantics}
-Positional values are provided by a space-separated list of values following the function
-name.
-The bytecode for both calls and definitions is identical to the simple call.
+The syntax and semantics for both calls and definitions are identical to the simple call.
 
 \subsubsection{Implementation}
-Guile does not enforce a restriction that values can only be supplied positionally.
+Guile does not explicitly enforce a restriction that values can only be supplied
+positionally.
 This is because, technically, all values are always supplied positionally.
 When a caller provides named values they are actually providing pairs of values: keywords
 as names and arbitrary values as values.
@@ -634,7 +633,9 @@ For example, given this call it is impossible to say whether the caller is suppl
 named values or positional values:
 
 \begin{pygmented}[lang=lisp]
-(make-dictionary #:first "one" #:second "two" #:third "three")
+(make-dictionary #:first  "one"
+                 #:second "two"
+                 #:third  "three")
 \end{pygmented}
 
 This could be a valid call to a function with named values:
@@ -651,7 +652,9 @@ This could be a valid call to a function with named values:
 Or it could be a valid call to a function which takes 6 positional values:
 
 \begin{pygmented}[lang=lisp]
-(define* (make-dictionary key0 val0 key1 val1 key2 val2)
+(define* (make-dictionary key0 val0
+                          key1 val1
+                          key2 val2)
   (let ((result (make-hash-table)))
     (hash-set! result key0 val0)
     (hash-set! result key1 val1)
@@ -688,11 +691,12 @@ The Scheme standard requires that implementations accept value positionally.
 This has been true since the original paper describing lisp
 \parencite[][pages 185-186]{original-lisp-paper-pt-1}.
 The stated motivation is to distinguish between "functions" and "forms".
-A function is the abstract idea of a formula that can have concrete numbers applied to it.
+In that paper, a function is the abstract idea of a formula that can have concrete numbers
+applied to it.
 Traditionally, a form is syntactically identical to a formula, but it is meant to be a
 stand-in for whatever value the formula will resolve to in context.
-The exact syntax is taken from a previous work which had a similar concern, and does not
-explicitly justify the postional notation
+The differentiating syntax is taken from a previous work which had a similar concern and
+does not explicitly justify the postional notation
 \parencite[][pages 3-7]{calculi-of-lambda-conversion}
 \footnote{
 	The decision to supply arguments positionally appears to derive from prior work
@@ -721,7 +725,7 @@ This feature is provided by defining methods in the Guile Object-Oriented Progra
 System (GOOPS).
 
 \subsubsection{Syntax \& Semantics}
-In GOOPS, methods are not contained within classes.
+In GOOPS methods are not contained within classes.
 Instead, they are simply functions with type specifications.
 When an author defines a method, they can choose to specify a type by providing a
 two-element list in place of an argument name
@@ -766,14 +770,14 @@ The author can also define alternative implementations for different types\footn
 	refer only to the source implementation which is relevant to type-checking.
 }
 
-Defining a method defines two separate function: a generic which is responsible for method
-dispatching and the method which contains the body that the author defined
+Defining a method defines two separate functions: a generic which is responsible for
+method dispatching and the method which contains the body that the author defined
 \parencite[][Section 8.6 "Methods and Generic Functons"]{guile-manual}.
 A generic is an applicable struct (a structure which can be called like a function) which
-store all methods which share a name
+stores all methods which share a name
 \parencite[][module/oop/goops.scm lines 2045-2065]{guile-source}.
 When a caller uses that name with some arguments, the generic object searches all of the
-methods associated with that name for a matching signature
+methods associated with that name for a signature with the best fit
 \parencite[][module/oop/goops.scm lines 1381-1449]{guile-source}.
 
 The bytecode for calling a function with typed values is identical to the simple call.
