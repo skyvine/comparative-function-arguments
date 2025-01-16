@@ -485,10 +485,10 @@ case they may be keywords)
 
 \subsection{Default Value}
 Provided through both \texttt{\#:optional} and \texttt{\#:key}.
-The semantics of \texttt{\#:key} are explained in the named values section, and do not
-meaningfully differ from \texttt{\#:optional} for the purpose of specifying default
-values.
-This section will only discuss \texttt{\#:optional}.
+When considering default values, both of these are semantically equivalent.
+The difference between them is whether values are passed by position or by name.
+This section will exclusively use \texttt{\#:optional} because none of the functions used
+in the examples are complicated enough to benefit from named values.
 
 \subsubsection{Syntax \& Semantics}
 The default value for an argument can either be specified or unspecified.
