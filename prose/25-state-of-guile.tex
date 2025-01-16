@@ -666,6 +666,23 @@ implementation is in use without inspecting the code
 	notice the difference between these implmentations very quickly!
 }.
 
+However, it is likely that using named values for a function which does not accept them
+will result in an error.
+This is because names are themselves values and are unlikely to be the correct kind of
+value for the function.
+For example, this attempt to use named values resulted in an error because the local
+variable \texttt{a} is bound to the value \texttt{\#:a}, which is not a valid input to the
+built-in \texttt{+} procedure:
+
+\begin{pygmented}[lang=lisp]
+(define (add-values a b)
+  (+ a b))
+
+(add-values #:a 5 #:b 7)
+; ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+; In procedure +: Wrong type argument in position 1: #:a
+\end{pygmented}
+
 \subsubsection{Historical Record}
 The Scheme standard requires that implementations accept value positionally.
 This has been true since the original paper describing lisp
