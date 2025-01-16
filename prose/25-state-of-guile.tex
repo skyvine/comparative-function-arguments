@@ -3,8 +3,8 @@
 \textbf{TODO:
 \begin{itemize}
   \item{Historical record of GOOPS}
-	\item{Talk about lambda-case in background (maybe, this is an intermediate representation which I considered out-of-scope for Python)}
-	\item{Either include bytecode in the destructuring section or explain why you don't}
+  \item{Talk about lambda-case in background (maybe, this is an intermediate representation which I considered out-of-scope for Python)}
+  \item{Either include bytecode in the destructuring section or explain why you don't}
   \item{Explain distinction between Guile, Scheme, and C}
   \item{Discuss rNrs in background \& particularly r2rs}
   \item{Remove most of the words from the background section...}
@@ -13,8 +13,8 @@
   \item{Figure out citation for devel archive}
   \item{Double-check bytecode samples are still correct after aux refactoring}
   \item{Normalize casing of "c-level"}
-	\item{Normalize bytecode explanations (refer to specific instruction numbers)}
-	\item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
+  \item{Normalize bytecode explanations (refer to specific instruction numbers, be consistent about whether the explanation or the snippet comes first)}
+  \item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
 \end{itemize}
 }
 
@@ -503,10 +503,12 @@ specification.
   (+ (or a 0) (or b 0)))
 \end{pygmented}
 
-This function adds the given values, using a default of \texttt{0} if one or both values
-are missing.
-The author can specify an alternative default value in the function signature by
-specifying the argument with a list instead of a symbol.
+This function adds the given values, and the body of the function uses the value
+\texttt{0} if the caller omitted a vaule.
+
+However, it is idiomatic to specify a default value in the function signature rather than
+testing the truthiness of the value.
+This is done by specifying the argument with a list instead of a symbol.
 The first element is the symbol naming the local variable and the second element is the
 default value.
 
@@ -563,7 +565,7 @@ simple call (instructions 15-18).
 \begin{pygmented}[lang=lisp]
 0  (bind-optionals 3)              ;; 2 argss
 1  (alloc-frame 3)                 ;; 3 slots
-2  (immediate-tag=? 1 4095 2308)   ;; undefined?         at ice-9/psyntax.scm:1849:37
+2  (immediate-tag=? 1 4095 2308)   ;; undefined?
 3  (jne 2)                         ;; -> L1
 4  (make-immediate 1 4)            ;; #f
 L1:
@@ -571,15 +573,15 @@ L1:
 6  (jne 2)                         ;; -> L2
 7  (make-immediate 0 4)            ;; #f
 L2:
-8  (immediate-tag=? 1 3839 4)      ;; false?             at default-value.scm:2:11
+8  (immediate-tag=? 1 3839 4)      ;; false?
 9  (jne 2)                         ;; -> L3
-10 (make-immediate 1 2)            ;; 0                  at default-value.scm:2:17
+10 (make-immediate 1 2)            ;; 0
 11 L3:
-12 (immediate-tag=? 0 3839 4)      ;; false?             at default-value.scm:2:20
+12 (immediate-tag=? 0 3839 4)      ;; false?
 13 (jne 2)                         ;; -> L4
-14 (make-immediate 0 2)            ;; 0                  at default-value.scm:2:26
+14 (make-immediate 0 2)            ;; 0
 L4:
-15 (call-scm<-scm-scm 2 1 0 0)     ;; add                at default-value.scm:2:8
+15 (call-scm<-scm-scm 2 1 0 0)     ;; add
 16 (reset-frame 1)                 ;; 1 slot
 17 (handle-interrupts)             
 18 (return-values)                 
