@@ -3,7 +3,8 @@
 \textbf{TODO:
 \begin{itemize}
   \item{Historical record of GOOPS}
-  \item{Talk about lambda-case in background}
+	\item{Talk about lambda-case in background (maybe, this is an intermediate representation which I considered out-of-scope for Python)}
+	\item{Either include bytecode in the destructuring section or explain why you don't}
   \item{Explain distinction between Guile, Scheme, and C}
   \item{Discuss rNrs in background \& particularly r2rs}
   \item{Remove most of the words from the background section...}
@@ -13,6 +14,7 @@
   \item{Double-check bytecode samples are still correct after aux refactoring}
   \item{Normalize casing of "c-level"}
 	\item{Normalize bytecode explanations (refer to specific instruction numbers)}
+	\item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
 \end{itemize}
 }
 
@@ -235,7 +237,7 @@ Provided through the \texttt{apply} function. This allows a caller to provide
 a list which is destructured into a set of positional arguments.
 
 \subsubsection{Syntax \& Semantics}
-Destructuring in guile has a simple interface, as \texttt{apply} is simply a function
+Destructuring in guile has a simple interface, as \texttt{apply} is simply a function that
 takes in a function as the first value, then any number of arbitrary values, and requires
 a possibly empty list as the final value.
 For example, all of these are equivalent:
@@ -377,7 +379,8 @@ For example, a definition of \texttt{add-values} with this feature would allow a
 the following calls to be legal, and they would all produce the value 6.
 
 \begin{pygmented}[lang=lisp]
-(define* (add-values #:key (a 0) (b 0) #:allow-other-keys)
+(define* (add-values #:key (a 0) (b 0)
+                     #:allow-other-keys)
   (+ (or a 0) (or b 0)))
 
 (add-values #:a 3 #:b 3)
@@ -416,7 +419,7 @@ The body of the \texttt{add} function compiles to the following bytecode:
 11 (return-values)
 \end{pygmented}
 
-The first instruction, \texttt{bind-kwargs} performs the bulk of the work required to
+The first instruction, \texttt{bind-kwargs}, performs the bulk of the work required to
 process named values at runtime.
 First, it initializes all relevant local variables (eg, ones that have default values or
 are named) to the undefined value.
