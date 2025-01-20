@@ -2,7 +2,7 @@
 
 \textbf{TODO:
 \begin{itemize}
-  \item{Historical record of GOOPS & variadic functions}
+  \item{Historical record of GOOPS \& variadic functions}
   \item{Talk about lambda-case in background (maybe, this is an intermediate representation which I considered out-of-scope for Python)}
   \item{Either include bytecode in the destructuring section or explain why you don't}
   \item{Explain distinction between Guile, Scheme, and C}
@@ -752,11 +752,9 @@ The author can also define alternative implementations for different types\footn
   (append a b))
 \end{pygmented}
 
-\parencite[][module/oop/goops.scm]{guile-source}
-
 \subsubsection{Implementation}
-\textit{
-	NOTE:
+
+\footnote{
 	In most implementation sections I present the bytecode associated with a function
 	definition and call and describe the low-level semantics.
 	This would not be useful for this section.
@@ -776,17 +774,41 @@ method dispatching and the method which contains the body that the author define
 \parencite[][Section 8.6 "Methods and Generic Functons"]{guile-manual}.
 A generic is an applicable struct (a structure which can be called like a function) which
 stores all methods which share a name
-\parencite[][module/oop/goops.scm lines 2045-2065]{guile-source}.
+\parencite[][module/oop/goops.scm lines 2045-2245]{guile-source}.
 When a caller uses that name with some arguments, the generic object searches all of the
 methods associated with that name for a signature with the best fit
 \parencite[][module/oop/goops.scm lines 1381-1449]{guile-source}.
+This indirectly causes an error if the caller provides a set of values which do not have a
+compatible type: the searching process will fail to find a match and print a message like
+this one:
+
+\begin{verbatim}
+ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+No applicable method for #<<generic> add-values (2)> in call (add-values foo bar)
+\end{verbatim}
 
 The bytecode for calling a function with typed values is identical to the simple call.
 
 \subsubsection{Historical Record}
-GOOPS is based on the STklos and CLOS, the object systems for STK and Common Lisp
-respectively.
+GOOPS was first added to the Guile repository in version 1.6
+\footnote{
+	I am tentatively using 4b5d86e0334f6b8c0b37c55cf47a4cd30e7803e0 as the commit which 
+	"adds GOOPS".
+	This is somewhat fictitious; 9 commits prior (fdd70ea97c142dc8db1e3f147ac6f5bd6ae157c6)
+	changed the major version "due to the merge of GOOPS".
+	However, at the time this commit was made no GOOPS files had been added; the version
+	number was adjusted in anticipation of the merge, not after the merge was complete.
+	I am choosing the other commit as representing the initial add of GOOPS to the
+	repository because it is the last consecutive commit which adds or modifies a GOOPS file
+	after the version adjustment.
+}
+\parencite[][Section 9.1.4 "A Timeline of Selected Guile Releases"]{guile-manual}.
+Its implementation was based on STklos, the object system for STK, and it was also
+influenced by CLOS, the object system for Common Lisp
+\parencite[][module/oop/goops.scm lines 24-25]{guile-source}
 \parencite[][Section 8.0 "GOOPS"]{guile-manual}.
+
+
 
 \subsection{Variadic Function}
 Provided by the "dotted list" syntax and the \texttt{\#:rest} keyword in a
