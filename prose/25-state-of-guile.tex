@@ -2,7 +2,6 @@
 
 \textbf{TODO:
 \begin{itemize}
-  \item{Either include bytecode in the destructuring section or explain why you don't}
   \item{Explain distinction between Guile, Scheme, and C}
   \item{Discuss rNrs in background \& particularly r2rs}
   \item{Remove most of the words from the background section...}
@@ -253,7 +252,7 @@ However, this would be an error because the final value is not a list:
 \end{pygmented}
 
 \subsubsection{Implementation}
-\texttt{Apply} operates by first collecting all of the positional arguments into a single
+\texttt{apply} operates by first collecting all of the positional arguments into a single
 list, with the final value as the tail of the list, and sending them to
 \texttt{scm\_call\_n}
 \parencite[][libguile/eval.c lines 585-622, lines 715-729]{guile-source}
@@ -264,7 +263,7 @@ list, with the final value as the tail of the list, and sending them to
   It takes 2 required arguments and a rest argument.
   The apply function takes any number of arguments and requires that the final argument is
   a list.
-  However, the body of the function simply calls \texttt{cons*} on the second required
+  Oddly, the body of the function simply calls \texttt{cons*} on the second required
   argument and the rest argument; one might expect that this would cause the user-provided
   list to be preserved instead of flattened.
   However, when a c-level function is registered with a rest argument in guile it receives
@@ -276,9 +275,24 @@ list, with the final value as the tail of the list, and sending them to
   sense now.
 }.
 This function is responsible for setting up the VM stack correctly
-\parencite[][libguile/vm.c lines 1542-1621]{guile-source},
-a task which would normally be handled by the \texttt{call} instruction
-\parencite[][libguile/vm-engine.c lines 428-461]{guile-source}.
+\parencite[][libguile/vm.c lines 1542-1621]{guile-source}.
+For example, these lines save the frame's metadata and add the arguments to the correct
+stack positions:
+
+\begin{pygmented}[lang=c]
+SCM_FRAME_SET_VIRTUAL_RETURN_ADDRESS (call_fp, vp->ip);
+SCM_FRAME_SET_MACHINE_RETURN_ADDRESS (call_fp, 0);
+SCM_FRAME_SET_DYNAMIC_LINK (call_fp, return_fp);
+SCM_FRAME_LOCAL (call_fp, 0) = proc;
+for (i = 0; i < nargs; i++)
+  SCM_FRAME_LOCAL (call_fp, i + 1) = argv[i];
+\end{pygmented}
+
+These tasks are handled by different components in the simple call.
+The frame's metadata is typically set by the \texttt{call} instruction
+\parencite[][libguile/vm-engine.c lines 428-461]{guile-source},
+while the arguments are added to the stack by the by separate instructions such as
+\texttt{make-immediate} or \texttt{scm-ref}.
 
 \subsubsection{Historical Record}
 The notion of list destructuring with \texttt{apply} was included in the original paper
