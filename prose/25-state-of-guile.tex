@@ -852,14 +852,44 @@ identical.
 \subsubsection{Implementation}
 For definitions, the only notable difference from the simple function is the addition of
 the \texttt{bind-rest} instruction near the beginning of the body.
-This instruction simply checks if there are any variadic values and sets the appropriate
-stack location to a list containing them (if there are) or an empty list (if there are
-not)
+This instruction takes values from the stack and constructs a new list which contains all
+of them; this list is bound to the variadic variable
 \parencite[][libguile/vm-engine.c lines 756-783,
              libguile/vm.c        lines 1041-1052]{guile-source}.
+
+\begin{pygmented}[lang=c]
+static SCM
+cons_rest (scm_thread *thread, uint32_t base)
+{
+  SCM rest = SCM_EOL;
+  uint32_t n = frame_locals_count (thread) - base;
+
+  while (n--)
+    rest = scm_inline_cons (thread, SCM_FRAME_LOCAL (thread->vm.fp, base + n),
+                            rest);
+
+  return rest;
+}
+\end{pygmented}
 
 For calls, the bytecode is identical to the simple call.
 
 \subsubsection{Historical Record}
-The dotted list syntax was first described in the Second Revised Report on Scheme
+The dotted list syntax was first described in the Second Revised Report on Scheme, with
+the same semantics that are in use today
 \parencite[][page 13]{r2rs}.
+The \texttt{\#:rest} syntax was originally used by other lisp dialects and implementations
+of Scheme; Guile provided it in the original release of the optargs module in order to
+ease the transition for programmers used to those languages
+\parencite[][commit 0a852b9424f949575afecb19a391023acc63e635 NEWS lines 849-843]{guile-source}
+
+As described in the section on positional values, the oldest versions of Guile manually
+collected argument values into a Scheme-level list and dispatched based on the number of
+values given.
+This made it trivial for the interpreter to supply the variadic values by dropping
+elements from the front of the list of all arguments
+\parencite[][libguile/eval.c lines 1652-1655]{guile-first-commit}.
+
+When the VM was added in version 2.0, the \texttt{bind-rest} instruction was included.
+It performs essentially the same work as the current implementation
+\parencite[][libguile/vm-i-system.c lines 718-732]{guile-2.0}.
