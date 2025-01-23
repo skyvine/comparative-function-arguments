@@ -2,8 +2,6 @@
 
 \textbf{TODO:
 \begin{itemize}
-  \item{Historical record of variadic functions}
-  \item{Talk about lambda-case in background (maybe, this is an intermediate representation which I considered out-of-scope for Python)}
   \item{Either include bytecode in the destructuring section or explain why you don't}
   \item{Explain distinction between Guile, Scheme, and C}
   \item{Discuss rNrs in background \& particularly r2rs}
@@ -170,8 +168,8 @@ While the VM has gone through changes since then, including a complete rewrite i
 \parencite[][Section 9.1.4 "A Timeline of Selected Guile Releases"]{guile-manual},
 the implementation of the \texttt{optargs} module has remained stable.
 The special-purpose VM instructions have been adapted to handle the details of VM
-operation correctly and decrease latency, but the core logic they use to process arguments
-has proven to be robust.
+operation correctly and decrease latency, but the core logic used to process arguments has
+proven to be robust.
 
 7c54029740a147a623c1f0564708d5471addf232 (Oct 03 2013) through
 553294d958c953f57658bad45affc15b55fcc471 (Nov 28 2013) - VM Rewrite
