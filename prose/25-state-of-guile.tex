@@ -5,7 +5,6 @@
   \item{Fix citation to manual to properly cite info manual instead of repo url}
   \item{Figure out citation for devel archive}
   \item{Double-check bytecode samples are still correct after aux refactoring}
-  \item{Normalize casing of "c-level"}
   \item{Normalize bytecode explanations (refer to specific instruction numbers, be consistent about whether the explanation or the snippet comes first)}
   \item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
   \item{Add explanation of subject of study to introduction}
@@ -180,14 +179,14 @@ list, with the final value as the tail of the list, and sending them to
 \footnote{
   A typical guile programmer (such as myself) who is familiar with the dotted list syntax
   or the \texttt{\#:rest} argument (both described in the section on variadic functions)
-  might be confused by the c-level API of the apply function.
+  might be confused by the C-level API of the apply function.
   It takes 2 required arguments and a rest argument.
   The apply function takes any number of arguments and requires that the final argument is
   a list.
   Oddly, the body of the function simply calls \texttt{cons*} on the second required
   argument and the rest argument; one might expect that this would cause the user-provided
   list to be preserved instead of flattened.
-  However, when a c-level function is registered with a rest argument in guile it receives
+  However, when a C-level function is registered with a rest argument in guile it receives
   an improper list of arguments, rather than the proper list provided when
   \texttt{\#:rest} is given to \texttt{define*}.
   See the file \texttt{examples/guile/c-gsubr-rest.scm} (and its corresponding c file) in
@@ -230,7 +229,7 @@ arguments
 \parencite[][libguile/eval.c lines 1869-1985]{guile-first-commit}.
 With the release of Guile 2.0, which added the virtual machine
 \parencite[][NEWS lines 5068-5071]{guile-source},
-the \texttt{apply} function delegated to \texttt{scm\_call\_with\_vm}, a dedicated c-level
+the \texttt{apply} function delegated to \texttt{scm\_call\_with\_vm}, a dedicated C-level
 helper function for calling scheme-level functions
 \parencite[][libguile/eval.c lines 782-802]{guile-2.0}.
 This was replaced with the \texttt{scm\_call\_n} function as part of a refactoring which
