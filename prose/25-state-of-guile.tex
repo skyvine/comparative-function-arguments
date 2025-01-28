@@ -111,7 +111,8 @@ proven to be robust.
 The bytecode
 \footnote{
 	The partial-evaluation optimization was turned off for all of the samples given here.
-	This is because partial evaluation reduces the entire program to a single number.
+	This is because partial evaluation frequently removes the function call itself as the
+	solution to add-values can be pre-calculated.
 }
 generated for the call to \texttt{add-values} performs the function call by loading
 the function, loading the arguments, and dispatching to the function.
