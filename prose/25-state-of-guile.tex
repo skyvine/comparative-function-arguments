@@ -114,25 +114,50 @@ proven to be robust.
 
 The bytecode generated for the call to \texttt{add-values} performs the function call by
 loading the function, loading the arguments, and dispatching to the function.
-Instructions 0-2 load the \texttt{add-values} procedure into the beginning of the stack
-and instruction 3 moves it into index 5.
-Instructions 4-5 place the constant values into the 4th and 3rd indices.
-Instruction 6 can be safely ignored; it handles events like signals from the operating
+
+Instruction 0 loads the literal string \texttt{"add-values"} into slot 7
+\parencite[][libguile/vm-engine.c line 2125-2129]{guile-source}.
+
+Instruction 1 looks up the value associated with the name \texttt{add-values} and stores
+it in slot 8
+\parencite[][libguile/vm-engine.c  lines 1545-1549,
+             libguile/intrinsics.c lines 374-376]{guile-source}.
+
+The value includes both the procedure itself and some associated metadata; instruction 2
+retrieves the procedure itself and stores it in slot 5
+\parencite[][libguile/vm-engine.c  lines 1906-1910]{guile-source}.
+
+Instructions 3-4 place the constant values 1000 and 1001 into slots 4 and 3, respectively.
+At this point the most relevant portion of the stack looks like this:
+
+\begin{center}
+	\begin{tabular}{ | c | c | }
+		\hline
+		Index & Value \\
+		\hline
+		5     & \#\textless procedure add-values\textgreater \\
+		4     & 1000 \\
+		3     & 1001 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+Instruction 5 can be safely ignored; it handles events like signals from the operating
 system.
-Finally, instruction 7 calls the function; internally, this involves moving the frame
+
+Finally, instruction 6 calls the function; internally, this involves moving the frame
 pointer to index 5 (where the procedure is stored) and the stack pointer to index 2 (the
 new end of the stack, which is smaller for the callee than for the caller)
 \parencite[][libguile/vm-engine.c lines 451-454]{guile-source}.
 
 \begin{pygmented}[lang=lisp]
-0 (call-scm<-thread 0 62)         ;; current-module
-1 (static-ref 1 16322)            ;; add-values
-2 (call-scm<-scm-scm 0 0 1 111)   ;; lookup-bound
-3 (scm-ref/immediate 5 0 1)       
-4 (make-immediate 4 4002)         ;; 1000
-5 (make-immediate 3 4006)         ;; 1001
-6 (handle-interrupts)             
-7 (call 4 3)                      
+0 (static-ref 7 16324)            ;; add-values
+1 (call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
+2 (scm-ref/immediate 5 8 1)
+3 (make-immediate 4 4002)         ;; 1000
+4 (make-immediate 3 4006)         ;; 1001
+5 (handle-interrupts)
+6 (call 3 3)
 \end{pygmented}
 
 The bytecode for the function definition is similar but simpler.
