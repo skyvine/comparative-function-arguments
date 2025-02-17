@@ -328,8 +328,7 @@ For example, a definition of \texttt{add-values} with this feature would allow a
 the following calls to be legal, and they would all produce the value 6.
 
 \begin{pygmented}[lang=lisp]
-(define* (add-values #:key (a 0) (b 0)
-                     #:allow-other-keys)
+(define* (add-values #:key a b #:allow-other-keys)
   (+ (or a 0) (or b 0)))
 
 (add-values #:a 3 #:b 3)
