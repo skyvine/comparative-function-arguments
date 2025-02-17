@@ -234,9 +234,8 @@ for (i = 0; i < nargs; i++)
 \end{pygmented}
 
 These tasks are handled by different components in the simple call.
-The frame's metadata is typically set by the \texttt{call} instruction
-\parencite[][libguile/vm-engine.c lines 428-461]{guile-source},
-while the arguments are added to the stack by the by separate instructions such as
+The frame's metadata is typically set by the \texttt{call} instruction , while the
+arguments are added to the stack by the by separate instructions such as
 \texttt{make-immediate} or \texttt{scm-ref}.
 
 \subsubsection{Historical Record}
