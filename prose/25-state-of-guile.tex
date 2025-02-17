@@ -121,7 +121,8 @@ Instruction 6 can be safely ignored; it handles events like signals from the ope
 system.
 Finally, instruction 7 calls the function; internally, this involves moving the frame
 pointer to index 5 (where the procedure is stored) and the stack pointer to index 2 (the
-new end of the stack, which is smaller for the callee than for the caller).
+new end of the stack, which is smaller for the callee than for the caller)
+\parencite[][libguile/vm-engine.c lines 451-454]{guile-source}.
 
 \begin{pygmented}[lang=lisp]
 0 (call-scm<-thread 0 62)         ;; current-module
