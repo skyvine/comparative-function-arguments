@@ -1,11 +1,10 @@
-(define* (add-values #:optional a b)
-	(+ (or a 0) (or b 0)))
+(add-to-load-path (dirname (current-filename)))
+(use-modules (default-value-lib))
 
-(add-values)
-(add-values 1000 1001)
+(add-values-default-false)
+(add-values-default-false 1000 1001)
 
-(define* (add-values #:optional (a 0) (b 0))
-	(+ a b))
+(add-values-default-zero)
+(add-values-default-zero 1002 1003)
 
-(add-values)
-(add-values 1002 1003)
+#t

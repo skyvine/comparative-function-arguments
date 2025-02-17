@@ -481,35 +481,40 @@ signature as this version is simpler:
 Instruction 0, \texttt{bind-optionals}, checks if the caller omitted any argument values.
 If so, it fills in the associated variables with the undefined value
 \parencite[][libguile/vm-engine.c lines 3213-3233]{guile-source}.
+
 The next 2 sections, instructions 2-4 and 5-7, check whether or not the local variables
 associated with optional values are undefined; if so, they are filled with the default
 value specified by the author.
+
 Finally, instructions 8-11 are the body of the function as found in the simple call.
 
 \begin{pygmented}[lang=lisp]
- 0 (bind-optionals 3)              ;; 2 args
- 1 (alloc-frame 8)                 ;; 8 slots
- 2 (immediate-tag=? 6 4095 2308)   ;; undefined?
- 3 (jne 2)                         ;; -> L1
- 4 (make-immediate 6 2)            ;; 0
+   0    (bind-optionals 3)              ;; 2 args
+   1    (alloc-frame 3)                 ;; 3 slots
+   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
+   3    (jne 2)                         ;; -> L1
+   4    (make-immediate 1 2)            ;; 0
 L1:
- 5 (immediate-tag=? 5 4095 2308)   ;; undefined?
- 6 (jne 2)                         ;; -> L2
- 7 (make-immediate 5 2)            ;; 0
+   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
+   6    (jne 2)                         ;; -> L2
+   7    (make-immediate 0 2)            ;; 0
 L2:
- 8 (call-scm<-scm-scm 7 6 5 0)     ;; add
- 9 (reset-frame 1)                 ;; 1 slot
-10 (handle-interrupts)
-11 (return-values)
+   8    (call-scm<-scm-scm 2 1 0 0)     ;; add
+   9    (reset-frame 1)                 ;; 1 slot
+  10    (handle-interrupts)
+  11    (return-values)
 \end{pygmented}
 
 The version which does not specify default values in the signature is similar.
 Instruction 0 is also \texttt{bind-optionals}.
+
 Instructinos 2-7 fill in the default value but in this case the value is
 \texttt{\#:false} rather than \texttt{0}.
+
 The next two sections check the argument values a second time and replace the argument
 value with \texttt{0} if it was false (instructions 8-14) - these represent the
 \texttt{or} statements in the source code.
+
 Instruction 15-18 are the body of the function as found in the simple call.
 
 \begin{pygmented}[lang=lisp]
