@@ -1,5 +1,5 @@
-(define* (sum #:key (a 3) (b 5))
-	(+ a b))
+(add-to-load-path (dirname (current-filename)))
+(use-modules (named-value-lib))
 
-(sum #:a 8 #:b 9)
+(add-values #:a 8 #:b 9)
 #t

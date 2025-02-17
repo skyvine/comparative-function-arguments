@@ -346,10 +346,11 @@ When Guile compiles a procedure it stores the list of valid argument names next 
 \textbf{TODO: 6.7.3 is the scheme-level API for accessing procedure metadata}
 When a function using named values is called, the compiler adds additional instructions
 before the call.
-Instruction 0, \texttt{bind-kwargs} (explained in more detail after the bytecode listing),
-performs the bulk of the work required to process named values at runtime.
+Instruction 0, \texttt{bind-kwargs}, performs the bulk of the work required to process
+named values at runtime.
 First, it initializes all relevant local variables (eg, ones that have default values or
-are named) to the undefined value.
+are named) to the undefined value
+\parencite[][libguile/vm.c lines 995-998]{guile-source}.
 Next, it walks through the list of non-positional arguments with the assumption that every
 even-indexed item is a keyword naming an argument and binds the odd-indexed items to the
 appropriate variables
@@ -359,50 +360,50 @@ appropriate variables
   definition.
   However, I am currently focused on named values in isolation of other features.
   \texttt{\#:rest} is discussed in the section on variadic functions.
-}.
+}
+\parencite[][libguile/vm.c lines 1000-1037]{guile-source}.
+
 Instruction 1 prepares the stack for the function call.
+
 Instructions 2-7 ensure that the local variables which come from named values are
 initialized properly; these instructions are actually about default values, not named
 values, so they are discussed in the appropriate section.
+
 Finally, instructions 8-11 are the body of the function as found in the simple call.
 
 \begin{pygmented}[lang=lisp]
- 0 (bind-kwargs
-     1 0 1 3 16367)
- 1 (alloc-frame 3)       ;; 3 slots
- 2 (immediate-tag=?
-     1 4095 2308)        ;; undefined?
- 3 (jne 2)               ;; -> L1
- 4 (make-immediate 1 14) ;; 3
-  
- 5 (immediate-tag=?
-     0 4095 2308)        ;; undefined?
- 6 (jne 2)               ;; -> L2
- 7 (make-immediate 0 4)  ;; #f
- 
- 8 (call-scm<-scm-scm
-      2 1 0 0)           ;; add
- 9 (reset-frame 1)       ;; 1 slot
-10 (handle-interrupts)
-11 (return-values)
+   0    (bind-kwargs 1 0 1 3 16351)     
+   1    (alloc-frame 3)                 ;; 3 slots
+   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
+   3    (jne 2)                         ;; -> L1
+   4    (make-immediate 1 14)           ;; 3
+L1:
+   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
+   6    (jne 2)                         ;; -> L2
+   7    (make-immediate 0 22)           ;; 5
+L2:
+   8    (call-scm<-scm-scm 2 1 0 0)     ;; add
+   9    (reset-frame 1)                 ;; 1 slot
+  10    (handle-interrupts)             
+  11    (return-values)                 
 \end{pygmented}
 
 The bytecode for the call is largely similar to the simple call, except that it also
-pushes the keywords onto the stack:
+sends the keywords as additional argument values to the function (while they are not
+considered values within the body of a \texttt{define*} form, they are values at this
+lower level):
 
 \begin{pygmented}[lang=lisp]
- 1 (call-scm<-thread 7 62)         ;; current-module
- 2 (static-ref 6 16329)            ;; sum
- 3 (call-scm<-scm-scm 7 7 6 41)    ;; define!
- 4 (make-non-immediate 6 16327)    ;; #<procedure sum (#:key a b)>
- 5 (scm-set!/immediate 7 1 6)      
- 6 (static-ref 3 16338)            ;; #:a
- 7 (make-immediate 2 34)           ;; 8
- 8 (static-ref 1 16347)            ;; #:b
- 9 (make-immediate 0 38)           ;; 9
-10 (make-immediate 4 4)            ;; #f
-11 (handle-interrupts)
-12 (call-label 3 5 8)              ;; sum at #x7f308dda2158
+ 1 (call-scm<-thread 8 62)         ;; current-module
+ 2 (static-ref 7 16324)            ;; add-values
+ 3 (call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
+ 4 (scm-ref/immediate 5 8 1)
+ 5 (static-ref 4 16331)            ;; #:a
+ 6 (make-immediate 3 34)           ;; 8
+ 7 (static-ref 2 16340)            ;; #:b
+ 8 (make-immediate 1 38)           ;; 9
+ 9 (handle-interrupts)
+10 (call 3 5)
 \end{pygmented}
 
 \subsubsection{Historical Record}
