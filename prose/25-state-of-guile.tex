@@ -10,9 +10,6 @@
 \end{itemize}
 }
 
-Definition of define*
-\parencite[][modules/system/ice-9/psyntax.scm lines 3377-3383]{guile-source}.
-
 Guile provides the following features:
 
 \begin{itemize}
@@ -23,6 +20,10 @@ Guile provides the following features:
   \item{Typed Values}
   \item{Variadic Functions}
 \end{itemize}
+
+All code samples were compiled with the partial-evaluation optimization turned off.
+This is because partial evaluation frequently removes the function call itself as the
+return values can be calculated at compile-time.
 
 \subsection{Background}
 Guile implements the Scheme programming language, which is a dialect of Lisp.
@@ -107,14 +108,8 @@ proven to be robust.
 (add-values 1000 1001)
 \end{pygmented}
 
-The bytecode
-\footnote{
-	The partial-evaluation optimization was turned off for all of the samples given here.
-	This is because partial evaluation frequently removes the function call itself as the
-	solution to add-values can be pre-calculated.
-}
-generated for the call to \texttt{add-values} performs the function call by loading
-the function, loading the arguments, and dispatching to the function.
+The bytecode generated for the call to \texttt{add-values} performs the function call by
+loading the function, loading the arguments, and dispatching to the function.
 Instructions 0-2 load the \texttt{add-values} procedure into the beginning of the stack
 and instruction 3 moves it into index 5.
 Instructions 4-5 place the constant values into the 4th and 3rd indices.
