@@ -69,7 +69,11 @@ When instructions take an index, they differ in whether they take in an index re
 the stack pointer or the frame pointer
 \parencite[][Section 9.3.5]{guile-manual}.
 This paper will always reference indexes relative to the stack pointer for the sake of
-consistency.
+consistency; this has the effect that frames start at a higher index and end at a lower
+index.
+For example, in the simple call the frame pointer, associated with the beginning of the
+stack, is moved to index 5 while the stack pointer, associated with the end of the stack,
+is moved to index 2.
 
 \subsubsection{The optargs module}
 Many of the features described in this paper are provided through Guile's \texttt{optargs}
@@ -115,10 +119,9 @@ and instruction 3 moves it into index 5.
 Instructions 4-5 place the constant values into the 4th and 3rd indices.
 Instruction 6 can be safely ignored; it handles events like signals from the operating
 system.
-Finally, instruction 7 calls the function.
-This involves moving the frame pointer to index 5 (where the procedure is stored) and the
-stack pointer to index 2 (the new end of the stack, which is smaller for the callee than
-for the caller).
+Finally, instruction 7 calls the function; internally, this involves moving the frame
+pointer to index 5 (where the procedure is stored) and the stack pointer to index 2 (the
+new end of the stack, which is smaller for the callee than for the caller).
 
 \begin{pygmented}[lang=lisp]
 0 (call-scm<-thread 0 62)         ;; current-module
