@@ -139,7 +139,8 @@ The bytecode for the function definition is similar but simpler.
 It calls the built-in function \texttt{add} (which corresponds to the \texttt{+}
 function).
 Because \texttt{add} is a built-in function it does not need to be loaded or placed on
-the stack and its arguments can come from any stack location.
+the stack and its arguments can come from any stack locations
+\parencite[][libguile/vm-engine.c line 1556]{guile-source}.
 
 \begin{pygmented}[lang=lisp]
 0 (call-scm<-scm-scm 7 6 5 0)     ;; add
