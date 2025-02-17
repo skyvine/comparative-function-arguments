@@ -143,10 +143,10 @@ the stack and its arguments can come from any stack locations
 \parencite[][libguile/vm-engine.c line 1556]{guile-source}.
 
 \begin{pygmented}[lang=lisp]
-0 (call-scm<-scm-scm 7 6 5 0)     ;; add
+0 (call-scm<-scm-scm 1 1 0 0)     ;; add
 1 (reset-frame 1)                 ;; 1 slot
-2 (handle-interrupts)             
-3 (return-values)                 
+2 (handle-interrupts)
+3 (return-values)
 \end{pygmented}
 
 \subsection{Caller Destructuring}
