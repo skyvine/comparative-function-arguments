@@ -1,4 +1,5 @@
 - citation philosophy
+- description vs analysis
 - latex -> html
   - Citations can pop-up info box
     - Additional information in citation without inflating citation count
@@ -7,7 +8,49 @@
 - doubts about black box
 - doubts about simple call
   - Some language influencing Python used named values as the "lower level" way (modula?)
+- thoughts on synthesis
 - Items for next draft
   - conversion to HTML
   - first pass at synthesis
 - Splitting into *-lib to avoid call-label
+
+There are 2 primary additions contained in this second draft: an expanded introduction
+which now includes visualizations to explain how I am reasoning about arguments and the
+newly added section on guile.
+In the process of adding these things, I have gathered some doubts about how I am
+approaching this paper.
+
+The biggest concern I have is the treatment of intermediate representations as black
+boxes.
+I restrict myself to examining the source code as input and whatever representation the
+language considers to be the "final" output - for Python and Guile this is bytecode, but
+for C this will be machine code.
+This seems useful to contain the scope of the paper, as otherwise the analysis section
+could get out of hand (if it is not already).
+However, I am worried that ignoring the intermediate representations prevents me from
+attaining certain insights.
+The purpose of examining the output of compilers is to understand how the computer is
+processing the information given to it by the human and to inform the implementation of
+the framework.
+The end result gives a concrete and literal understanding of what actions the computer
+decides to take based on the human's input, but it doesn't tell me how the computer
+arrived at those conclusions or why it made the decisions it did.
+What happened during the Guile section is that I looked at intermediate representations
+in order to inform my description of the language, but I did not directly discuss these
+representations in the paper.
+This might be the best compromise, and it is how I will proceed for the time being.
+
+I am uncertain what subject of study this paper actually falls into.
+Looking at the paper by word count, much of it is focused on the way that programming
+languages operate and accept input - so, computer science right?
+Except that my primary concern is not about the compuer per se, but the way that humans
+use source code to communicate, both with the computer and with each other.
+So is this information science because I'm concerned with the transmission of information?
+Is it sociological because I'm concerned with human-to-human interaction, albeit indirect
+and asynchronous interaction?
+Or is it just computer science that (should) draw on other fields in order to enhance the
+validity of the work?
+I'm not sure.
+I'm also uncertain how useful it is to precisely define what the "subject of study" is, or
+if it is even realistic to expect that any given work will fit neatly into exactly one
+subject of study.
