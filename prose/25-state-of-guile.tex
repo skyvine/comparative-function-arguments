@@ -4,7 +4,6 @@
 \begin{itemize}
   \item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
   \item{Normalize order of presenting call/definition. Maybe add subheadings?}
-  \item{Clarify source of comments in bytecode listings}
 \end{itemize}
 }
 
@@ -22,6 +21,26 @@ Guile provides the following features:
 All code samples were compiled with the partial-evaluation optimization turned off.
 This is because partial evaluation frequently removes the function call itself as the
 return values can be calculated at compile-time.
+
+Additionally, bytecode listings include comments which help explain what the instruction
+is doing.
+The meaning of the comment depends on the instruction.
+For example, the \texttt{make-immediate} bytecode instruction copies a literal static
+value onto the stack.
+It contains a comment which indicates the value loaded:
+
+\begin{pygmented}[lang=lisp]
+(make-immediate 4 4002)         ;; 1000
+\end{pygmented}
+
+While the \texttt{call-scm<-scm-scm} instruction includes the name of the built-in
+function it is calling:
+
+\begin{pygmented}[lang=lisp]
+(call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
+\end{pygmented}
+
+These comments are helpfully added by the Guile decompiler, not by this paper's author.
 
 \subsection{Background}
 Guile implements the Scheme programming language, which is a dialect of Lisp.
