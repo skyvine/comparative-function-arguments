@@ -1,19 +1,3 @@
-- citation philosophy
-- description vs analysis
-- latex -> html
-  - Citations can pop-up info box
-    - Additional information in citation without inflating citation count
-  - Code samples can be in margin
-  -references to simple call can pop up the relevant code snippet
-- doubts about black box
-- doubts about simple call
-  - Some language influencing Python used named values as the "lower level" way (modula?)
-- thoughts on synthesis
-- Items for next draft
-  - conversion to HTML
-  - first pass at synthesis
-- Splitting into *-lib to avoid call-label
-
 There are 2 primary additions contained in this second draft: an expanded introduction
 which now includes visualizations to explain how I am reasoning about arguments and the
 newly added section on guile.
@@ -40,7 +24,34 @@ in order to inform my description of the language, but I did not directly discus
 representations in the paper.
 This might be the best compromise, and it is how I will proceed for the time being.
 
-I am uncertain what subject of study this paper actually falls into.
+I am also beginning to doubt the idea of having a separate section for the "simple
+function and call".
+The problem is that it undercuts the positional value section because the simple function
+and call is so similar to the positional value examples.
+However, I am still partial towards including this section.
+First, it avoids priveliging any particular feature over the others.
+While it is true that all of the languages in this paper use positional values as the
+base form of a function call (with Python fitting this idea less well than the others),
+this is mostly an historical accident and not due to the fundamental nature of function
+arguments.
+For example, Modula originally used named values exclusively and later added in positional
+values; the paper describing this addition states that the positional values are converted
+to named values as a pre-processing step.
+\textbf{TODO: double-check that this actually is Modula and find that paper again}
+Also, there are sometimes positional-specific aspects to discuss in the positional section
+which are not relevant to the simple function and call; for example, in Python it is
+considered simpler for a function to accept either positional or named values than it is
+to accept positional values only (this is quite abnormal relative to the other languages
+in this paper).
+Second, it gives a clear starting point for someone who is looking at the paper and only
+cares about some of the features.
+The section title "Simple Function and Call" clearly indicates to the reader that this is
+an expectation-setting section which should be read regardless of the reader's particular
+interest.
+In contrast, it is less intuitive to read the positional values section if one is mainly
+concerned with, for example, default values.
+
+Additionally, I am uncertain what subject of study this paper actually falls into.
 Looking at the paper by word count, much of it is focused on the way that programming
 languages operate and accept input - so, computer science right?
 Except that my primary concern is not about the compuer per se, but the way that humans
@@ -48,9 +59,72 @@ use source code to communicate, both with the computer and with each other.
 So is this information science because I'm concerned with the transmission of information?
 Is it sociological because I'm concerned with human-to-human interaction, albeit indirect
 and asynchronous interaction?
-Or is it just computer science that (should) draw on other fields in order to enhance the
+Or is it computer science that (should) draw on other fields in order to enhance the
 validity of the work?
 I'm not sure.
 I'm also uncertain how useful it is to precisely define what the "subject of study" is, or
 if it is even realistic to expect that any given work will fit neatly into exactly one
 subject of study.
+
+Finally, I am growing increasingly skeptical that LaTeX is the best tool for publishing,
+particularly when when compared to web technologies (HTML, CSS, JavaScript).
+LaTeX both creates extra work for me and fails to provide as many features as the web.
+For example, the current draft includes many code boxes with code that spills out of the
+box.
+Many of the code samples which fit the box have poor formatting in order to make them
+fit.
+In some cases it is my example code which can be modified, but in other cases it is code
+samples which come from third parties; modifying these would be dishonest.
+Fixing this problem wastes my time as the author and decreases readability for the
+audience.
+Web technologies solve this problem elegantly by providing a scroll bar for text that
+spills over.
+Web technologies also provide other useful dynamic features.
+For example, if the text size is too small for a particular reader they can zoom in on a
+PDF but this will force the reader to constantly scroll around the page which is
+particularly inconvenient in the two-column format (I know this from personal experience).
+Modern web browsers implement zooming by changing the font size and automatically updating
+the page layout based on style rules.
+Web technologies also allow me to use more powerful presentation tools in my paper.
+For example, a code sample which is associated with a block of text can be attached to
+that text in the margin and scroll along with the reader so it is always accessible (by
+using the "sticky" attribute).
+In places where I reference a previous code sample - for example when I compare the
+bytecode of a specific feature to the bytecode for the simple function/call - I can
+implement a pop-up box that appears when the user hovers over the text for ease of
+reference.
+Of course, this is still a paper not a website.
+The paper will continue to be published as a single portable self-contained document.
+The fact that the document opens in Firefox instead of Evince will not change this
+important attribute.
+
+On the topic of more powerful publishing features and pop-up boxes, I feel the need to
+address my citations.
+I understand that the citations in the current draft are extremely cumbersome to read
+past.
+However, I also feel that providing precise location information is important.
+The purpose of citations are not simply to justify my claims, they are meant to help a
+reader who wants to explore a particular aspect of the paper, or who wants to examine a
+tangentially related topic.
+I have frequently been frustrated when reading other paper that they make claims about how
+programs function but provide no information about how they justify this claim - whether
+through source code, documentation, or just running the damn thing!
+I do not want any of my readers to have a similar frustration.
+With the move to web technologies, I can have WikiPedia-style citations which are simply
+a number that pops out a box containing detailed information when hovered.
+This will also help me provide precise information relevant to the specific citaiton index
+without inflating my citation count artificially (for example, by keeping the Guile
+repository as a single citation but continuing to provide file and line numbers through
+the pop out box).
+
+The next draft of this paper will primarily focus on converting the format to web
+technologies with minimal changes to content.
+However, I also want to explore what the analysis will look like.
+This seems complicated because I want to discuss each feature in isolation but I also want
+to discuss how they interact with each other.
+There are far too many features to describe each possible pairing, and even if I did this
+would still not be complete.
+For example, named values, default values, and caller destructuring could interact in ways
+that are not fully describable in isolated pairings.
+I will not really know what this part will look like until I finish describing all of the
+languages but I want to start trying things out now to get the brain juices flowing. =)
