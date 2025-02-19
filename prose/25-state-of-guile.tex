@@ -3,10 +3,7 @@
 \textbf{TODO:
 \begin{itemize}
   \item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
-  \item{Add explanation of subject of study to introduction}
   \item{Normalize order of presenting call/definition. Maybe add subheadings?}
-  \item{Add reading guide, re: simple call}
-  \item{See TODO note for procedure metadata, search 6.7.3}
   \item{Clarify source of comments in bytecode listings}
 \end{itemize}
 }
@@ -343,7 +340,6 @@ When Guile compiles a procedure it stores the list of valid argument names next 
 \texttt{SCM} object representing the code
 \parencite[][libguile/vm-engine.c lines 734, 736, 743-745;
              libbugile/vm.c       lines 1003, 1008-1009]{guile-source}.
-\textbf{TODO: 6.7.3 is the scheme-level API for accessing procedure metadata}
 When a function using named values is called, the compiler adds additional instructions
 before the call.
 Instruction 0, \texttt{bind-kwargs}, performs the bulk of the work required to process
