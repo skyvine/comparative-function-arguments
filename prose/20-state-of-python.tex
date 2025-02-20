@@ -159,13 +159,8 @@ add_values_mixed(1000, b=1001)
 \end{pygmented}
 
 \subsubsection{Implementation}
-The bytecode for positional values is identical to the bytecode for the simple call.
-Python stores the values of local variables in the C-level array `localsplus`.
-The \texttt{CALL} instruction copies positional arguments from the stack into this array
-\parencite[][Python/ceval.c lines 1341-1353]{python-source}.
-
-The bytecode for function definitions is identical regardless of the presence of
-positional-only arguments.
+The bytecode for function definitions is identical to the simple definition regardless of
+the presence of positional-only arguments.
 The restriction is enforced within the \texttt{CALL} instruction.
 In particular, the helper function \texttt{positional\_only\_passed\_as\_keyword} uses the
 \texttt{co\_posonlyargcount} and \texttt{co\_localsplusnames} members of the code object.
@@ -180,6 +175,11 @@ raises an error.
 Note that the helper is only called if the function does not include a variadic variable
 for named values
 \parencite[][Python/ceval.c lines 1417-1431]{python-source}.
+
+The bytecode for positional values is identical to the bytecode for the simple call.
+Python stores the values of local variables in the C-level array `localsplus`.
+The \texttt{CALL} instruction copies positional arguments from the stack into this array
+\parencite[][Python/ceval.c lines 1341-1353]{python-source}.
 
 \subsubsection{Historical Record}
 Positional values have always been available in Python and requires no special syntax to

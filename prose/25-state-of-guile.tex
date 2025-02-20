@@ -2,8 +2,8 @@
 
 \textbf{TODO:
 \begin{itemize}
+  \item{Normalize terminology for referencing slots.}
   \item{Normalize manner of discussing cross-feature implications. Inline, footnotes, or dedicated section?}
-  \item{Normalize order of presenting call/definition. Maybe add subheadings?}
 \end{itemize}
 }
 
@@ -129,8 +129,54 @@ proven to be robust.
 (add-values 1000 1001)
 \end{pygmented}
 
-The bytecode generated for the call to \texttt{add-values} performs the function call by
-loading the function, loading the arguments, and dispatching to the function.
+The bytecode generated for the function definition is fairly straightforward.
+
+\begin{pygmented}[lang=lisp]
+0 (call-scm<-scm-scm 1 1 0 0)     ;; add
+1 (reset-frame 1)                 ;; 1 slot
+2 (handle-interrupts)
+3 (return-values)
+\end{pygmented}
+
+Instruction 0 calls the built-in function \texttt{add} (which corresponds to the \texttt{+}
+function) and places the result into index 0
+\parencite[][liguile/vm-engine.c lines 1545-1549]{guile-source}.
+
+Instruction 1 resizes the stack so that it contains 1 element - in this case, the return
+value
+\parencite[][libguile/vm-engine.c lines 797-802]{guile-source}.
+
+Instruction 2 ensures that Guile properly handles signals like Ctrl-C (SIGINT) and
+code instrumentation
+\parencite[][Section 9.3.7.6 "Instrumentation Instructions",
+             Section 6.22.3  "Asynchronous Interrupts"]{guile-manual};
+it can be safely ignored here and it will not be mentioned again.
+
+Finally, the \texttt{return-values} instruction moves the flow of execution back to the
+caller.
+Counterintutively, it does not actually handle moving the return valuse to
+specific locations; it only sets the frame and instruction pointers to the caller's
+values
+\parencite[][libguile/vm-engine.c lines 530-555]{guile-source}.
+
+The bytecode generated for the call to \texttt{add-values} is more complicated because it
+is calling a user-defined function.
+It needs to load the function and its arguments
+\footnote{
+	The function definition did not have to manage the arguments for the built-in call
+	because built-in calls take values from arbitrary stack locations which are specified
+	in the instruction arguments, so the caller-supplied locations were reusable.
+}, then dispatch to the function.
+
+\begin{pygmented}[lang=lisp]
+0 (static-ref 7 16324)            ;; add-values
+1 (call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
+2 (scm-ref/immediate 5 8 1)
+3 (make-immediate 4 4002)         ;; 1000
+4 (make-immediate 3 4006)         ;; 1001
+5 (handle-interrupts)
+6 (call 3 3)
+\end{pygmented}
 
 Instruction 0 loads the literal string \texttt{"add-values"} into slot 7
 \parencite[][libguile/vm-engine.c line 2125-2129]{guile-source}.
@@ -159,37 +205,10 @@ At this point the most relevant portion of the stack looks like this:
 	\end{tabular}
 \end{center}
 
-Instruction 5 can be safely ignored; it handles events like signals from the operating
-system.
-
 Finally, instruction 6 calls the function; internally, this involves moving the frame
 pointer to index 5 (where the procedure is stored) and the stack pointer to index 2 (the
 new end of the stack, which is smaller for the callee than for the caller)
 \parencite[][libguile/vm-engine.c lines 451-454]{guile-source}.
-
-\begin{pygmented}[lang=lisp]
-0 (static-ref 7 16324)            ;; add-values
-1 (call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
-2 (scm-ref/immediate 5 8 1)
-3 (make-immediate 4 4002)         ;; 1000
-4 (make-immediate 3 4006)         ;; 1001
-5 (handle-interrupts)
-6 (call 3 3)
-\end{pygmented}
-
-The bytecode for the function definition is similar but simpler.
-It calls the built-in function \texttt{add} (which corresponds to the \texttt{+}
-function).
-Because \texttt{add} is a built-in function it does not need to be loaded or placed on
-the stack and its arguments can come from any stack locations
-\parencite[][libguile/vm-engine.c line 1556]{guile-source}.
-
-\begin{pygmented}[lang=lisp]
-0 (call-scm<-scm-scm 1 1 0 0)     ;; add
-1 (reset-frame 1)                 ;; 1 slot
-2 (handle-interrupts)
-3 (return-values)
-\end{pygmented}
 
 \subsection{Caller Destructuring}
 Provided through the \texttt{apply} function. This allows a caller to provide
@@ -359,8 +378,26 @@ When Guile compiles a procedure it stores the list of valid argument names next 
 \texttt{SCM} object representing the code
 \parencite[][libguile/vm-engine.c lines 734, 736, 743-745;
              libbugile/vm.c       lines 1003, 1008-1009]{guile-source}.
-When a function using named values is called, the compiler adds additional instructions
-before the call.
+When a function using named values is defined, the compiler adds additional instructions
+as a prelude in the definition.
+
+\begin{pygmented}[lang=lisp]
+   0    (bind-kwargs 1 0 1 3 16351)     
+   1    (alloc-frame 3)                 ;; 3 slots
+   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
+   3    (jne 2)                         ;; -> L1
+   4    (make-immediate 1 14)           ;; 3
+L1:
+   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
+   6    (jne 2)                         ;; -> L2
+   7    (make-immediate 0 22)           ;; 5
+L2:
+   8    (call-scm<-scm-scm 2 1 0 0)     ;; add
+   9    (reset-frame 1)                 ;; 1 slot
+  10    (handle-interrupts)             
+  11    (return-values)                 
+\end{pygmented}
+
 Instruction 0, \texttt{bind-kwargs}, performs the bulk of the work required to process
 named values at runtime.
 First, it initializes all relevant local variables (eg, ones that have default values or
@@ -384,24 +421,7 @@ Instructions 2-7 ensure that the local variables which come from named values ar
 initialized properly; these instructions are actually about default values, not named
 values, so they are discussed in the appropriate section.
 
-Finally, instructions 8-11 are the body of the function as found in the simple call.
-
-\begin{pygmented}[lang=lisp]
-   0    (bind-kwargs 1 0 1 3 16351)     
-   1    (alloc-frame 3)                 ;; 3 slots
-   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
-   3    (jne 2)                         ;; -> L1
-   4    (make-immediate 1 14)           ;; 3
-L1:
-   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
-   6    (jne 2)                         ;; -> L2
-   7    (make-immediate 0 22)           ;; 5
-L2:
-   8    (call-scm<-scm-scm 2 1 0 0)     ;; add
-   9    (reset-frame 1)                 ;; 1 slot
-  10    (handle-interrupts)             
-  11    (return-values)                 
-\end{pygmented}
+Finally, instructions 8-11 are the body of the function as found in the simple definition.
 
 The bytecode for the call is largely similar to the simple call, except that it also
 sends the keywords as additional argument values to the function (while they are not
@@ -484,22 +504,9 @@ default value.
 This version is semantically equivalent to the first.
 
 \subsubsection{Implementation}
-The bytecode for calling a function using default values does not differ from the bytecode
-for the simple call.
-
 The bytecode for the function definition differs significantly.
 I will start with the bytecode for the function which includes default values in the
 signature as this version is simpler:
-
-Instruction 0, \texttt{bind-optionals}, checks if the caller omitted any argument values.
-If so, it fills in the associated variables with the undefined value
-\parencite[][libguile/vm-engine.c lines 3213-3233]{guile-source}.
-
-The next 2 sections, instructions 2-4 and 5-7, check whether or not the local variables
-associated with optional values are undefined; if so, they are filled with the default
-value specified by the author.
-
-Finally, instructions 8-11 are the body of the function as found in the simple call.
 
 \begin{pygmented}[lang=lisp]
    0    (bind-optionals 3)              ;; 2 args
@@ -518,17 +525,18 @@ L2:
   11    (return-values)
 \end{pygmented}
 
-The version which does not specify default values in the signature is similar.
-Instruction 0 is also \texttt{bind-optionals}.
+Instruction 0, \texttt{bind-optionals}, checks if the caller omitted any argument values.
+If so, it fills in the associated variables with the undefined value
+\parencite[][libguile/vm-engine.c lines 3213-3233]{guile-source}.
 
-Instructinos 2-7 fill in the default value but in this case the value is
-\texttt{\#:false} rather than \texttt{0}.
+The next 2 sections, instructions 2-4 and 5-7, check whether or not the local variables
+associated with optional values are undefined; if so, they are filled with the default
+value specified by the author.
 
-The next two sections check the argument values a second time and replace the argument
-value with \texttt{0} if it was false (instructions 8-14) - these represent the
-\texttt{or} statements in the source code.
+Finally, instructions 8-11 are the body of the function as found in the simple call.
 
-Instruction 15-18 are the body of the function as found in the simple call.
+The version which does not specify default values in the signature is similar, but
+contains additional (and repetitious) logic.
 
 \begin{pygmented}[lang=lisp]
  0 (bind-optionals 3)              ;; 2 argss
@@ -554,6 +562,20 @@ L4:
 17 (handle-interrupts)             
 18 (return-values)                 
 \end{pygmented}
+
+Instruction 0 is also \texttt{bind-optionals}.
+
+Instructions 2-7 fill in the default value but in this case the value is
+\texttt{\#:false} rather than \texttt{0}.
+
+The next two sections check the argument values a second time and replace the argument
+value with \texttt{0} if it was false (instructions 8-14) - these represent the
+\texttt{or} statements in the source code.
+
+Instruction 15-18 are the body of the function as found in the simple call.
+
+The bytecode for calling a function using default values does not differ from the bytecode
+for the simple call.
 
 \subsubsection{Historical Record}
 Default values were included in the original \texttt{optargs} implementation
@@ -722,6 +744,8 @@ The author can also define alternative implementations for different types\footn
 \subsubsection{Implementation}
 
 \footnote{
+	\textbf{TODO: Remove this footnote, this is by no means unique to this subsection and if
+	it needs to be addressed it should be done so in an introductory section.}
 	In most implementation sections I present the bytecode associated with a function
 	definition and call and describe the low-level semantics.
 	This would not be useful for this section.
