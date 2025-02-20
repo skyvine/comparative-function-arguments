@@ -1,11 +1,5 @@
 \section{Guile}
 
-\textbf{TODO:
-\begin{itemize}
-  \item{Normalize terminology for referencing slots.}
-\end{itemize}
-}
-
 Guile provides the following features:
 
 \begin{itemize}
@@ -38,6 +32,10 @@ function it is calling:
 \begin{pygmented}[lang=lisp]
 (call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
 \end{pygmented}
+
+Note that the \texttt{alloc-frame} instruction will contain a comment referring to the
+number of "slots" that the frame has; this refers to the size of the stack after the
+instruction returns.
 
 These comments are helpfully added by the Guile decompiler, not by this paper's author.
 
@@ -177,19 +175,19 @@ It needs to load the function and its arguments
 6 (call 3 3)
 \end{pygmented}
 
-Instruction 0 loads the literal string \texttt{"add-values"} into slot 7
+Instruction 0 loads the literal string \texttt{"add-values"} into index 7
 \parencite[][libguile/vm-engine.c line 2125-2129]{guile-source}.
 
 Instruction 1 looks up the value associated with the name \texttt{add-values} and stores
-it in slot 8
+it in index 8
 \parencite[][libguile/vm-engine.c  lines 1545-1549,
              libguile/intrinsics.c lines 374-376]{guile-source}.
 
 The value includes both the procedure itself and some associated metadata; instruction 2
-retrieves the procedure itself and stores it in slot 5
+retrieves the procedure itself and stores it in index 5
 \parencite[][libguile/vm-engine.c  lines 1906-1910]{guile-source}.
 
-Instructions 3-4 place the constant values 1000 and 1001 into slots 4 and 3, respectively.
+Instructions 3-4 place the constant values 1000 and 1001 into indices 4 and 3, respectively.
 At this point the most relevant portion of the stack looks like this:
 
 \begin{center}
