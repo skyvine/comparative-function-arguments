@@ -1,24 +1,25 @@
 \section{Overview}
-Most of this part is dedicated to describing the features of various languages that are
-relavent to this paper, in terms defined by this paper.
+This part is dedicated to describing the features of various languages that are sampled
+by this paper, using the terms defined by this paper.
 Each of these sections will start with a summary of the features provided by the language.
 Next, it will explain the background knowledge necessary in order to understand the
 feature descriptions.
 This explanation will include an example of a "simple function and call" which serves two
 purposes.
-First, it provides the reader with a concrete example of what analysis looks like in the
+First, it provides the reader with a concrete example of what will be described in the
 context of this language.
-For example, in Python "analysis" means assessing the behavior of the interpreter and the
-bytocode emitted by the compiler.
+For example, the description in Python will focus on the behavior of the interpreter and
+the bytecode emitted by the compiler.
 Second, it provides a point of comparison when describing features.
-In the Python analysis, the description of destructuring discusses how the bytecode for
-this feature differs from a call that does not include destructuring.
+In Python, the description of destructuring primarily describes the
+\texttt{CALL_FUNCTION_EX} instruction, with some description of list-building instructions
+towards the end, rather than describing every single instruction that is emitted.
 This keeps each section shorter because they do not have to explain the baseline they are
-being compared to.
-It also makes it easier for a reader to focus only on the features that interest them
-because they can read the simple call section then the feature section without having to
-pick through other features to find the background information that they require.
-Finally, each language analysis will describe each of the features.
+being compared to; the sections are not self-contained, but they all have exactly one
+dependency and the dependency plus the section are self-contained.
+This makes it easier for a reader to focus only on the features that are relevant to them,
+if they so choose.
+Finally, each of the features provided by the language will be described.
 
 Each feature description will start either with a statement that the feature is not
 provided or a statement of how the feature is provided.
@@ -29,8 +30,8 @@ feature at a later point.
 Therefore, the Python section about positional values starts with "provided by default"
 while the section about named values starts with "provided through keyword arguments".
 This helps the reader understand the feature's relationship to the language and clarifies
-what terminology they should expect to see if they are reading language documentation, or
-what terms they should use if they want to perform a digital search for more information.
+what terminology will be useful if they are reading language documentation or performing
+an internet search.
 After this statement, any distinctive qualities of the feature as provided by the language
 will be noted.
 

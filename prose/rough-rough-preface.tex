@@ -9,8 +9,8 @@ boxes.
 I restrict myself to examining the source code as input and whatever representation the
 language considers to be the "final" output - for Python and Guile this is bytecode, but
 for C this will be machine code.
-This seems useful to contain the scope of the paper, as otherwise the analysis section
-could get out of hand (if it is not already).
+This seems useful to contain the scope of the paper, as otherwise the analysis and
+description parts could get out of hand (if they are not already).
 However, I am worried that ignoring the intermediate representations prevents me from
 attaining certain insights.
 The purpose of examining the output of compilers is to understand how the computer is
@@ -31,13 +31,14 @@ and call is so similar to the positional value examples.
 However, I am still partial towards including this section.
 First, it avoids priveliging any particular feature over the others.
 While it is true that all of the languages in this paper use positional values as the
-base form of a function call (with Python fitting this idea less well than the others),
+default (with Python fitting this idea less well than the others),
 this is mostly an historical accident and not due to the fundamental nature of function
 arguments.
-For example, Modula originally used named values exclusively and later added in positional
-values; the paper describing this addition states that the positional values are converted
-to named values as a pre-processing step.
-\textbf{TODO: double-check that this actually is Modula and find that paper again}
+For example, the Modula-3 language definition (https://doi.org/10.1145/142137.142141)
+states "The list of bindings is rewritten to fit the signature of \texttt{P's} type as
+follows: First, each positional binding \texttt{actual} is converted and added to the list
+of keyword bindings by supplying the name of the \texttt{i'th} formal parameter, where
+\texttt{actual} is the \texttt{i'th} binding in \texttt{Bindings}."
 Also, there are sometimes positional-specific aspects to discuss in the positional section
 which are not relevant to the simple function and call; for example, in Python it is
 considered simpler for a function to accept either positional or named values than it is
@@ -54,7 +55,7 @@ concerned with, for example, default values.
 Additionally, I am uncertain what subject of study this paper actually falls into.
 Looking at the paper by word count, much of it is focused on the way that programming
 languages operate and accept input - so, computer science right?
-Except that my primary concern is not about the compuer per se, but the way that humans
+Except that my primary concern is not about the computer itself, but the way that humans
 use source code to communicate, both with the computer and with each other.
 So is this information science because I'm concerned with the transmission of information?
 Is it sociological because I'm concerned with human-to-human interaction, albeit indirect
@@ -86,8 +87,8 @@ particularly inconvenient in the two-column format (I know this from personal ex
 Modern web browsers implement zooming by changing the font size and automatically updating
 the page layout based on style rules.
 Web technologies also allow me to use more powerful presentation tools in my paper.
-For example, a code sample which is associated with a block of text can be attached to
-that text in the margin and scroll along with the reader so it is always accessible (by
+For example, a code sample which is associated with a series of paragraphs can be attached
+to that text in the margin and scroll along with the reader so it is always accessible (by
 using the "sticky" attribute).
 In places where I reference a previous code sample - for example when I compare the
 bytecode of a specific feature to the bytecode for the simple function/call - I can
@@ -106,16 +107,16 @@ However, I also feel that providing precise location information is important.
 The purpose of citations are not simply to justify my claims, they are meant to help a
 reader who wants to explore a particular aspect of the paper, or who wants to examine a
 tangentially related topic.
-I have frequently been frustrated when reading other paper that they make claims about how
-programs function but provide no information about how they justify this claim - whether
-through source code, documentation, or just running the damn thing!
+I have frequently been frustrated when reading other papers that they make claims about
+how programs function but provide no information about how they justify this claim -
+whether through source code, documentation, or simply running the program.
 I do not want any of my readers to have a similar frustration.
 With the move to web technologies, I can have WikiPedia-style citations which are simply
 a number that pops out a box containing detailed information when hovered.
-This will also help me provide precise information relevant to the specific citaiton index
-without inflating my citation count artificially (for example, by keeping the Guile
-repository as a single citation but continuing to provide file and line numbers through
-the pop out box).
+This will help me achieve my goal of providide precise information relevant to the
+specific citaiton index without inflating my citation count artificially (for example, by
+keeping the Guile repository as a single citation but continuing to provide file and line
+numbers through the pop out box).
 
 The next draft of this paper will primarily focus on converting the format to web
 technologies with minimal changes to content.
