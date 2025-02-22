@@ -505,5 +505,18 @@ Variadic values are values which are associated with this feature.
 For example, a variadic function may require one positional value at the beginning of the
 value list.
 The first value is not a variadic value but all other values are.
-A variadic variable is provided by some languages. This is a local variable bound to some
-(possibly empty) aggregate datatype (typically a list) which contains variadic values.
+
+\subsection{Structure of Paper}
+
+The remainder of this paper will be divided into 3 parts: Description, Analysis, and
+Implementation.
+The purpose of these parts is to first understand what the current state of the craft is,
+then assess the advantages and disadvantages of different approaches, and finally create
+a framework that allows programmers to make context-aware decisions in an interoperable
+manner.
+The description section simply explains the way that a sample of programming languages
+process function arguments.
+The analysis section compares these approaches to each other and comments on the
+appropriateness of each approach for different contexts.
+The implementation section describes how the framework was developed and how it operates
+in practice.
