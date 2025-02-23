@@ -27,7 +27,7 @@ It contains a comment which indicates the value loaded:
 \end{pygmented}
 
 While the \texttt{call-scm<-scm-scm}, which is pronounced "Call scheme from scheme scheme"
-to signify that it is calling a built-in function that returns as scheme value and accepts
+to signify that it is calling a built-in function that returns a scheme value and accepts
 two scheme values as input, includes the name of the built-in function it is calling:
 
 \begin{pygmented}[lang=lisp]
@@ -36,9 +36,9 @@ two scheme values as input, includes the name of the built-in function it is cal
 
 Note that the \texttt{alloc-frame} instruction will contain a comment referring to the
 number of "slots" that the frame has; this refers to the size of the stack after the
-instruction returns.
+instruction finishes executing.
 
-These comments are helpfully added by the Guile decompiler, not by this paper's author.
+These comments are helpfully added by the Guile decompiler.
 
 \subsection{Background}
 Guile implements the Scheme programming language, which is a dialect of Lisp.
@@ -46,10 +46,11 @@ Scheme was originally described in a 1975 paper for demonstrative purposes
 \parencite[][page 1]{r0rs}.
 Interest in the language led to a series of revisions to the original description and,
 eventually, standardization.
-These papers are refered to as "Revised Reports on Scheme", abbreviated to "rNrs" where
-the N is replaced with a number representing the revision count.
-For example, the most recently published version of the standard is the 7th iteration on
-the Scheme programming language so it is referred to as "r7rs".
+These papers are refered to as "Revised Reports on Scheme", abbreviated to
+"r\textsuperscript{N}rs" where the N is replaced with a number representing the revision
+count.
+For example, the most recently published version of the standard is the 7th revision of
+the Scheme programming language so it is referred to as "r\textsuperscript{7}rs".
 
 Guile was originally implemented as an interpreter which worked with a literal
 representation of a program's text
@@ -283,8 +284,8 @@ defining the lisp programming language
 \parencite[][pages 189-190]{original-lisp-paper-pt-1}.
 This original definition took exactly 2 parameters, a function and a list containing the
 arguments.
-r2rs extended this by allowing the caller to pass any number of values between the
-function and the list
+r\textsuperscript{2}rs extended this by allowing the caller to pass any number of values
+between the function and the list
 \parencite[][page 57]{r2rs}.
 
 In the original interpreter, Guile simply called the function after manually unpacking the
@@ -870,8 +871,8 @@ cons_rest (scm_thread *thread, uint32_t base)
 For calls, the bytecode is identical to the simple call.
 
 \subsubsection{Historical Record}
-The dotted list syntax was first described in r2rs, with the same semantics that are in
-use today
+The dotted list syntax was first described in r\textsuperscript{2}rs, with the same
+semantics that are in use today
 \parencite[][page 13]{r2rs}.
 The \texttt{\#:rest} syntax was originally used by other lisp dialects and implementations
 of Scheme; Guile provided it in the original release of the optargs module in order to
