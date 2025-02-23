@@ -26,8 +26,9 @@ It contains a comment which indicates the value loaded:
 (make-immediate 4 4002)         ;; 1000
 \end{pygmented}
 
-While the \texttt{call-scm<-scm-scm} instruction includes the name of the built-in
-function it is calling:
+While the \texttt{call-scm<-scm-scm}, which is pronounced "Call scheme from scheme scheme"
+to signify that it is calling a built-in function that returns as scheme value and accepts
+two scheme values as input, includes the name of the built-in function it is calling:
 
 \begin{pygmented}[lang=lisp]
 (call-scm<-scm-scm 8 8 7 111)   ;; lookup-bound
@@ -88,6 +89,11 @@ index.
 For example, in the simple call the frame pointer, associated with the beginning of the
 stack, is moved to index 5 while the stack pointer, associated with the end of the stack,
 is moved to index 2.
+
+Guile produces different kinds of call instructions based on the call's location.
+Code samples in the repository were intentionally crafted to ensure that they always
+produced the plain \texttt{call} instruction; irrelevant parts of the code (such as a
+constant value placed after the call) are omitted from this paper.
 
 \subsubsection{The optargs module}
 Many of the features described in this paper are provided through Guile's \texttt{optargs}
