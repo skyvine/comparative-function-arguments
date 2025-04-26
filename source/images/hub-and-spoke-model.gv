@@ -1,0 +1,16 @@
+digraph {
+	Argument         [shape=circle]
+	Name             [shape=circle]
+	Explanation      [shape=circle]
+	Value            [shape=circle]
+	"Local Variable" [shape=circle]
+
+	Argument         -> Name
+	Name             -> Argument
+	Argument         -> Explanation
+	Explanation      -> Argument
+	Argument         -> Value
+	Value            -> Argument         [color=green]
+	Argument         -> "Local Variable" [color=green]
+	"Local Variable" -> Argument
+}

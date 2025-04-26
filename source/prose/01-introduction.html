@@ -1,5 +1,6 @@
-\section{Introduction}
+<h2 class="chapter-heading">Introduction</h2>
 
+<p>
 Functions are one of the core abstractions that programmers use.
 These functions - and their authors - have to communicate with different calling sites -
 and their authors - in different contexts.
@@ -13,122 +14,158 @@ Those same people who are later debugging code which includes a call to that fun
 might use the word "arguments" to refer to the values which are given to the function.
 This informal use of the word is sufficient for day-to-day use, but it starts to break
 down when examined more closely.
+</p>
 
+<p>
 Consider that the Rust programming lanugage allows programmers to specify arguments using
 one of two mechanisms.
 In the common case, programmers can use a plain name and type:
+</p>
 
-\begin{pygmented}[lang=rust]
-fn jump_plain(starting: &Point) -> Point {
-  Point {
-    x: starting.x,
-    y: starting.y * 2
+<code data-programming-language="rust"><pre>
+  fn jump_plain(starting: &Point) -> Point {
+    Point {
+      x: starting.x,
+      y: starting.y * 2
+    }
   }
-}
-\end{pygmented}
+</pre></code>
 
+<p>
 It would not be controvertial to claim that this function contains one argument.
-This argument happens to be associated with a local variable named \texttt{starting} which
-is guaranteed to contain data of type \texttt{Point}.
+This argument happens to be associated with a local variable named <code>starting</code>
+which is guaranteed to contain data of type <code>Point</code>.
+</p>
 
-When it is useful, programmers can also specify an argument by a pattern
-\footnote{Technically the "plain name" is also a pattern, just a very simple one.}
+<p>
+When it is useful, programmers can also specify an argument by a
+pattern<span class="footnote-indicator">*</span>
+	<span class="footnote">
+	(technically the "plain name" is also a pattern, just a very simple one)
+	</span>
 and type:
+</p>
 
-\begin{pygmented}[lang=rust]
-fn jump_pattern(Point {
-                  x: h, // horizontal
-                  y: v  // vertical
-                }: &Point)
-  -> Point {
-
-  Point {
-    x: *h,
-    y: *v * 2
+<code data-programming-language="rust"><pre>
+  fn jump_pattern(Point {
+                    x: h, // horizontal
+                    y: v  // vertical
+                  }: &amp;Point)
+    -&gt; Point {
+  
+    Point {
+      x: *h,
+      y: *v * 2
+    }
   }
-}
-\end{pygmented}
+</pre></code>
 
+<p>
 Does this version contain one argument or two?
-We could say that it contains 2 arguments, \texttt{h} and \texttt{v}.
+We could say that it contains 2 arguments, <code>h</code> and <code>v</code>.
 In the context of the function definition this would make sense.
 However, at the calling site both appear to accept only a single argument:
+</p>
 
-\begin{pygmented}[lang=rust]
-jump_plain  (&uut);
-jump_pattern(&uut);
-\end{pygmented}
+<code data-programming-language="rust"><pre>
+jump_plain  (&amp;uut);
+jump_pattern(&amp;uut);
+</pre></code>
 
+<p>
 Consider also the conventions in shell programming languages.
 Shell functions might include "options" which are arguments that may or may not be related
 to the argument that follows it.
 For example, consider the following function:
+</p>
 
-\include{00-bash-example.tex}
+<code data-programming-language="bash"><pre>
+!!INCLUDE examples/bash/test.bash!!
+</pre></code>
 
-Some of the ways this function could be called include (1) \texttt{main -{}-ignore=foo},
-(2) \texttt{main -{}-ignore foo}, (3) \texttt{main -ifoo}, or (4) \texttt{main -i foo}.
+<p>
+Some of the ways this function could be called include (1) <code>main --ignore=foo</code>,
+(2) <code>main --ignore foo</code>, (3) <code>main -ifoo</code>, or (4)
+<code>main -i foo</code>.
 All of these calls are semantically synonymous.
 However, in 1 and 3, the bash interpreter initially sees only a single argument while in 2
 and 4 it sees 2 separate arguments.
-In either case, the call to \texttt{getopt} reorganizes the arguments so that the name
-(either "-{}-ignore" or "-i") is separate from the value ("foo").
+In either case, the call to <code>getopt</code> reorganizes the arguments so that the name
+(either "--ignore" or "-i") is separate from the value ("foo").
 This makes the "number of arguments" an ambiguous value.
+</p>
 
-\subsection{What is an argument?}
+<h3 class="subsection-heading">What is an argument?</h3>
 
+<p>
 So, how can we construct a definition of "function argument" which does not suffer from
 the above deficiencies?
 The definition provided by the C standard is a good place to start: it precisely defines 2
 relevant terms, parameter and argument
-\parencite[][Section 3]{c17}.
 It defines a parameter as an
-"object
-\footnote {
+<q>object<span class="footnote-indicator">*</span>
+<span class="footnote">
 	Use of the term "object" here refers to any region of memory, not the concept of an
 	object popularized by object-oriented programming.
-}
+</span>
 declared as part of a function declaration or definition that acquires a value on
 entry to the function, or an identifier from the comma-separated list bounded by the
-parentheses immediately following the macro name in a function-like macro definition".
+parentheses immediately following the macro name in a function-like macro
+definition</q>
+<span class="citation-indicator">(C17)</span>
+<span class="citation">
+	Section 3.16<br/>
+	!!INCLUDE references/c17.html!!
+</span>.
 It defines an argument as an
-"expression in the comma-separated list bounded by the parentheses in a function call
-expression, or a sequence of preprocessing tokens in the comma-separated list bounded by
-the parentheses in a function-like macro invocation".
+<q>expression in the comma-separated list bounded by the parentheses in a function
+call expression, or a sequence of preprocessing tokens in the comma-separated list bounded
+by the parentheses in a function-like macro invocation</q>
+<span class="citation-indicator">(C17)</span>
+<span class="citation">
+	Section 3.3<br/>
+	!!INCLUDE references/c17.html!!
+</span>.
 Additionally, the standard defines a relationship between arguments and parameters:
-"In preparing for the call to a function, the arguments are evaluated, and each parameter
-is assigned the value of the corresponding argument"
-\parencite[][Section 6.5.2.2 paragraph 4]{c17}.
+<q>In preparing for the call to a function, the arguments are evaluated, and each parameter
+is assigned the value of the corresponding argument</q>
+<span class="citation-indicator">(C17)</span>
+<span class="citation">
+	Section 6.5.2.2<br/>
+	!!INCLUDE references/c17.html!!
+</span>.
 We could visualize the description with the below diagram.
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle]
-		(-1, 0) node[shape=circle, draw, minimum size=55, name=parameter,] {Parameter}
-		( 4, 0) node[shape=circle, draw, minimum size=55, name=argument,]  {Argument};
-	\draw [<-] (parameter) -- (argument);
-\end{tikzpicture}
+!!INCLUDE images/c-model.svg!!
 
+<p>
 Here the circles represent concepts within the C model of computation - the local
 variable declared by the parameter and the value given as an argument.
 The line between them represents their relationship: the expectation that the local
 variables will be initialized with the values.
+</p>
 
+<p>
 While this visualization fully encompasses the model described by the C standard, it does
 not fully encompass the mental model used by some programmers.
 For example, consider this C function:
+</p>
 
-\begin{pygmented}[lang=c]
-/*
- * Calculate the division of two numbers.
- *
- * lhs: The dividend
- * rhs: The divisor
- */
-float divide(float lhs, float rhs) {
-  return lhs / rhs;
+<code data-programming-language="c"><pre>
+  /*
+   * Calculate the division of two numbers.
+   *
+   * lhs: The dividend
+   * rhs: The divisor
+   */
+  float divide(float lhs, float rhs) {
+    return lhs / rhs;
+  }
 }
-\end{pygmented}
+</pre></code>
 
+<p>
 The comment above the function reveals 2 elements in the author's mental model which are
 absent from the visualization: an explanation and a name.
 The explanation, such as the text "the dividend", communicates the intention of an
@@ -140,40 +177,25 @@ In order to accommodate this, we need to update the visualization with "name" an
 "explanation" nodes.
 The explanation node is connected directly to the name a established by the comment.
 It is indirectly connected to both the parameter and the value through the name.
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle]
-		(-3, -3) node[shape=circle, draw, minimum size=55, name=parameter,]   {Parameter}
-		( 3, -3) node[shape=circle, draw, minimum size=55, name=argument,]    {Argument}
-		( 0,  0) node[shape=circle, draw, minimum size=55, name=name,]        {Name}
-		( 0,  3) node[shape=circle, draw, minimum size=55, name=explanation,] {Explanation};
-	\draw [<-] (parameter) -- (argument);
-	\draw [<-] (name)      -- (explanation);
-	\draw [->] (name)      -- (parameter);
-	\draw [->] (name)      -- (argument);
-\end{tikzpicture}
+!!INCLUDE images/programmer-mental-model.svg!!
 
+<p>
 Unfortunately, this method of building the visualization will quickly become unwieldy.
 As we add more tools requiring more concepts the graph will grow in both size and
 complexity, as each tool might add new associations between nodes leading to a tangle of
 lines.
 It is more effective to consider the "argument" to be an abstract concept which connects
 the concrete things together; in order to accommodate this, I will use the term "value"
-to refer to the concrete thing that C refers to as an "argument":
+to refer to the concrete thing that C refers to as an "argument". At the same time, I will
+use the term "local variable" instead of "parameter" in order to focus our attention on
+the concrete thing that the argument is associated with.
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle, align=center]
-		( 0,  0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
-		(-3,  3) node[shape=circle, draw, minimum size=55, name=local-variable,] {Local\\Variable}
-		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
-		( 3, -3) node[shape=circle, draw, minimum size=55, name=name,] {Name}
-		( 3,  3) node[shape=circle, draw, minimum size=55, name=explanation,] {Explanation};
-	\draw [-] (argument) -- (local-variable);
-	\draw [-] (argument) -- (value);
-	\draw [-] (argument) -- (name);
-	\draw [-] (argument) -- (explanation);
-\end{tikzpicture}
+!!INCLUDE images/hub-and-spoke-model.svg!!
 
+<p>
 This "hub and spoke model" allows us to attach relavant concepts to the argument as a
 whole.
 Each processing tool can search for the concepts it needs by checking which things are
@@ -183,14 +205,16 @@ When we want to consider a specific tool, we can modify the graph by trimming un
 and adding arrows that are relevant to the tool.
 For example, consider a tool which assesses the complexity of lines of code in a program.
 It might encounter a line like this:
+</p>
 
-\begin{pygmented}[lang=c]
+<code data-programming-language="c"><pre>
 divide(4, c=(a + (b * 2) / 3));
-\end{pygmented}
+</pre></code>
 
+<p>
 This line would probably be rated as complex due to the use of assignment as an
 expression, and possibly due to the number of mathematical operations in the expression.
-The tool could simply reprt the line number but in complicated programs it might also be
+The tool could simply report the line number but in complicated programs it might also be
 useful to specify which argument is the source of the problem.
 That is, instead of simply saying "on line number x" it could say "in the value given to
 the rhs argument in the call to divide on line number x".
@@ -198,16 +222,11 @@ In order to determine the argument name it would first look for the argument tha
 associated with the source of the complexity.
 Then it looks for the name associated with the argument in order to understand how to
 communicate effectively with the human:
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle, align=center]
-		( 0,  0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
-		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
-		( 3, -3) node[shape=circle, draw, minimum size=55, name=name,] {Name};
-	\draw [<-, line width=1] (argument) -- (value);
-	\draw [->, line width=1] (argument) -- (name);
-\end{tikzpicture}
+!!INCLUDE images/error-report.svg!!
 
+<p>
 This method solves the problem of connections between nodes growing out of control.
 As another example, in the bash program we would want to include the concept of option
 names as well as the the variable which ultimately receives the value.
@@ -215,10 +234,10 @@ Additionally, Bash exposes some of the processing which is implicitly performed 
 compiler in C.
 This makes it a useful example to demonstrate how actions typically taken by the
 compiler/interpreter can be mapped onto the visualization.
-I will focus on the \texttt{case} statement which determines which given values should be
-associated with which environment variables.
-First, the \texttt{case} statement examines the short or long option to determine which
-argument is being provided.
+I will focus on the <code>case</code> statement which determines which given values should
+be associated with which environment variables.
+First, the <code>case</code> statement examines the short or long option to determine
+which argument is being provided.
 This is represented by the green arrows in the below diagram, moving from the option to
 the argument.
 Next, the logic inside the relevant case determines which value is associated with the
@@ -230,22 +249,11 @@ interpreter retrieves the value then returns to the argument for further process
 Finally, the value is placed into an environment variable.
 This is represented by the orange arrow, moving from the argument to the environment
 variable and "carrying" the value with it.
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle, align=center]
-		( 0,  0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
-		(-3,  3) node[shape=circle, draw, minimum size=55, name=environment-variable,]
-			{Environment\\Variable}
-		(-3, -3) node[shape=circle, draw, minimum size=55, name=value,] {Value}
-		( 3, -3) node[shape=circle, draw, minimum size=55, name=short-option,] {Short\\Option}
-		( 3,  3) node[shape=circle, draw, minimum size=55, name=long-option,] {Long\\Option}
-	;
-	\draw [->, line width=1,  color=orange] (argument) -- (environment-variable);
-	\draw [<->, line width=1, color=purple] (argument) -- (value);
-	\draw [<-, line width=1,  color=green ] (argument) -- (short-option);
-	\draw [<-, line width=1,  color=green ] (argument) -- (long-option);
-\end{tikzpicture}
+!!INCLUDE images/bash-example.svg!!
 
+<p>
 The Rust program produces a more complex graph due to the presence of the pattern.
 The compiler processes the pattern by looking at the data provided in a structured manner;
 it knows that a specific local variable should be initialized with a subset of the bits
@@ -255,27 +263,11 @@ Instad, they are associated with a data type which is associated with the argume
 Where the Bash graph was relatively simple, with all nodes other than the Argument node
 containing exactly one connection to the Argument node, the Rust graph contains a subgraph
 attached to the Argument node.
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle, align=center]
-		(0,     0) node[shape=circle, draw, minimum size=55, name=argument,] {Argument}
-		(-1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-h,]
-			{Local\\Variable\\(\texttt{h})}
-		( 1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-v,]
-			{Local\\Variable\\(\texttt{v})}
-		( 1.5,  2) node[shape=circle, draw, minimum size=55, name=type,] {Type\\(Point)}
-		( 3.5,  1) node[shape=circle, draw, minimum size=55, name=member-x,] {Member\\(\texttt{x})}
-		( 3.5,  3) node[shape=circle, draw, minimum size=55, name=member-y,] {Member\\(\texttt{y})}
-		(-1.5,  2) node[shape=circle, draw, minimum size=55, name=value,] {Value}
-	;
-	\draw [-] (argument) -- (local-variable-h);
-	\draw [-] (argument) -- (local-variable-v);
-	\draw [-] (argument) -- (value);
-	\draw [-] (argument) -- (type);
-	\draw [-] (type) -- (member-x);
-	\draw [-] (type) -- (member-y);
-\end{tikzpicture}
+!!INCLUDE images/rust-abstract.svg!!
 
+<p>
 When the Rust compiler encounters a call to this function it first retrieves the value
 from the calling site.
 This is represented by the green arrow in the below diagram, moving from the value to the
@@ -286,32 +278,11 @@ This is shown in the double-ended purple arrows which represent the compiler per
 this lookup and returning to the argument with this information in hand.
 Finally, it associates the relevant subsets with the relevant local variables as shown
 by the orange arrows moving from the argument to the local variables.
+</p>
 
-\begin{tikzpicture}
-	\path[shape=circle, align=center]
-		(0,     0) node[shape=circle, draw, minimum size=55, name=argument,]
-				{Argument}
-		(-1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-h,]
-			{Local\\Variable\\(\texttt{h})}
-		( 1.5, -2) node[shape=circle, draw, minimum size=55, name=local-variable-v,]
-			{Local\\Variable\\(\texttt{v})}
-		( 1.5,  2) node[shape=circle, draw, minimum size=55, name=type,]
-				{Type\\(Point)}
-		( 3.5,  1) node[shape=circle, draw, minimum size=55, name=member-x,]
-			{Member\\(\texttt{x})}
-		( 3.5,  3) node[shape=circle, draw, minimum size=55, name=member-y,]
-			{Member\\(\texttt{y})}
-		(-1.5,  2) node[shape=circle, draw, minimum size=55, name=value,]
-				{Value}
-	;
-	\draw [<-,  line width=1, color=green ] (argument) -- (value);
-	\draw [<->, line width=1, color=purple] (argument) -- (type);
-	\draw [<->, line width=1, color=purple] (type) -- (member-x);
-	\draw [<->, line width=1, color=purple] (type) -- (member-y);
-	\draw [->,  line width=1, color=orange] (argument) -- (local-variable-h);
-	\draw [->,  line width=1, color=orange] (argument) -- (local-variable-v);
-\end{tikzpicture}
+!!INCLUDE images/rust-concrete.svg!!
 
+<p>
 Visualizing arguments in this manner leads me to define an argument as an abstract concept
 which emerges from the way that processors (both computer and human) associate concrete
 things.
@@ -322,8 +293,11 @@ to create arbitrary associations when declaring arguments.
 This will generalize the features provided by various languages, allowing programmers to
 use the set of features that make sense given the context they are working in without
 needing to change the language that they are programming in.
+</p>
 
-\subsection{Practical Applications}
+<h3 class="subsection-heading">Practical Applications</h3>
+
+<p>
 While the theoretical problems with the term "argument" compel me to investigate this
 phenomenon, some people might ask whether this actually makes a difference to people who
 are working on computers to achieve practical ends.
@@ -338,7 +312,9 @@ Any improvement to the function call interface will have an outsized effect on d
 due to the sheer volume of function calls we have to deal with.
 Additionally, my intuition is backed by observing the industry, including which
 technologies gain and maintain popularity as well as the way people interact with them.
+</p>
 
+<p>
 Consider the way that bash commonly processes arguments.
 It is often the case that a caller can supply different values for the same argument in
 the same call, with the values that are syntactically later overriding the was that are
@@ -358,103 +334,128 @@ This paper will define semnatics like this as metadata associated with arguments
 which can be interpreted differently or changed completely by tools specialized for
 specific contexts (for example, an interpreter could behave differently if it is given a
 script on the command-line compared to when it is running an interactive session).
+</p>
 
+<p>
 The contextual differences extend to social settings as well.
 For example, as we will see in the section on Python it is possible for an author to
 specify that some values cannot be given by name (by default, callers may choose whether
 to pass values by position or name freely).
 One of the justifications given for this is that it simply does not make sense to use
 names for some functions in any context.
-The example given is a casting funciton with the signature \texttt{as\_my\_type(x)}.
-Here, they argue, it will never make sense to use the name \texttt{x} because it does not
+The example given is a casting funciton with the signature \code{as_my_type(x)}.
+Here, they argue, it will never make sense to use the name <code>x</code> because it does not
 provide any meaning.
 However, a teacher in a Programming 101 class might decide that they want to name all
 values in their code examples and assignments, so that the code is clearer for people who
 are learning to program for the first time.
-While they could omit the name for some simple functions such as \texttt{as\_my\_type}
+While they could omit the name for some simple functions such as \code{as_my_type}
 this adds conceptual complication to the material: now students must switch between
 processing positional values and named values on a case-by-case basis, or else
 completely abandon named values.
 By specifying these restrictions through accessible metadata, the teacher could simply
 remove this restriction for the purpose of their class without disturbing the upstream
 project.
+</p>
 
-\subsection{Reproducibility and Transparency}
+<h3 class="subsection-heading">Reproducibility and Transparency</h3>
 
-The source code used in example snippets can be found in the online git repository located
-at http://git.sr.ht/\texttildelow{}skyvine/comparative-function-arguments.
+<p>
+The source code used in example snippets can be found in the
+<a href="http://git.sr.ht/~skyvine/comparative-function-arguments">online git repository</a>.
 The repository includes files appropriate for use with GNU Guix to reproduce the software
 environment I used while creating this paper.
 It pins to a specific revision of the main Guix channel so that updates do not interfere
 with reproducibility.
-The Makefile within the "examples" directory launches a pure shell\footnote{
-	Here, "pure" means that enviornment conditions such as variables are unset so that the
-	shell does not use any artifacts from the base operating system by mistake.
-}
-for the user so that
-environmental factors do not interfere with reproducibility.
+The Makefile within the "examples" directory launches a
+pure shell<span class="footnote-indicator">*</span>
+<span class="footnote">
+	(Here, "pure" means that enviornment conditions such as variables are unset so that the
+	shell does not use any artifacts from the base operating system by mistake.)
+</span>
+for the user so that environmental factors do not interfere with reproducibility.
+</p>
 
+<p>
 The git repository also contains the bibtex file used to generate references in this
 paper.
-This source file contains additional information which is not present in the output, such
+This source file contains additional information<span class="footnote-indicator">*</span>
+<span class="footnote">
+	(I intend to incorporate this information into the references in the final version of
+	this paper, but I have not used Latex before so I will need to learn how to do that.)
+</span>
+which is not present in the output, such
 as the SHA256 of referenced tarballs and the commit hash of source repositories.
-\footnote {
-	I intend to incorporate this information into the references in the final version of
-	this paper, but I have not used Latex before so I will need to learn how to do that.
-}
+</p>
 
-\subsection{Clarifying Terminology}
+<h3 class="subsection-heading">Clarifying Terminology</h3>
 
+<p>
 As mentioned above, this paper defines the term "argument" to refer to a set of
 associations between concrete code objects, such as values and variables.
 Some languages provide similar features under different names and sometimes those names
 do not align with the vocabulary used by this paper.
 For example, different communities use different terms to refer to the values that shell
 functions interpret as implying a value.
-A shell function might recognize a value "-{}-verbose" to mean that a variable named
+A shell function might recognize a value "--verbose" to mean that a variable named
 "verbose" should have the value "true".
 I have heard this mechanism variously referred to as a flag, a switch, or an option.
 This paper refers to this mechanism as an "implicit value" because the caller uses a name
 associated with the argument to imply a value which does not appear explicitly.
 A complete least of terms which describe a feature provided by more than one language
 follows:
+</p>
 
-\textbf{Positional Value} \textit{(common name: N/A)}:
+<p><strong>TODO:</strong> Stop abusing semantic elements...</p>
+
+<p>
+<strong>Positional Value</strong> <em>(common name: N/A)</em>:<br />
 These values are associated with arguments based on the index of the value in the list of
 all positional values.
+</p>
 
-\textbf{Default Value} \textit{(common name: Optional Argument)}:
+<p>
+<strong>Default Value</strong> <em>(common name: Optional Argument)</em>:<br />
 A value that an author associates with an argument for use when
 the caller declines to supply a value.
+</p>
 
-\textbf{Named Value} \textit{(common name: Keyword Argument, Option Argument
-\footnote{
-	The term "option argument" is not to be confused with the term "option\textbf{al}
-	argument".
-	The former is used by shell users to refer to an argument that come after an option
-	(such as "-{}-ignore" "foo" in the previous example) while an option\textbf{al} argument
-	is a term used by scripters and system programmers to refer to an argument associated
-	with a default value.
-})}:
+<p>
+<strong>Named Value</strong> <em>(common name: Keyword Argument, Option
+Argument<span class="footnote-indicator">*</span>
+<span class="footnote">
+	(The term "option argument" is not to be confused with the term
+	"option<strong>al</strong> argument". The former is used by shell users to refer to an
+	argument that come after an option (such as "--ignore" "foo" in the previous example)
+	while an option<strong>al</strong> argument is a term used by scripters and system
+	programmers to refer to an argument associated with a default value.)
+</span>
+)</em>:<br />
 These values are associated with an argument based on a name which the caller attaches to
 the value.
-The argument may be associated with several \textbf{synonymous} names.
+The argument may be associated with several <strong>synonymous</strong> names.
+</p>
 
-\textbf{Implicit Value} \textit{(common names: Switch, Flag, Option)}:
+<p>
+<strong>Implicit Value</strong> <em>(common names: Switch, Flag, Option)</em>:<br />
 An argument has an implicit value if the caller can specify a name associated with the
 argument but omit the value.
-For example, many CLI tools have a "-{}-verbose" flag which increases the amount of output
+For example, many CLI tools have a "--verbose" flag which increases the amount of output
 produced.
-An argument with an implicit value may also have \textbf{antonyms}, which invert the
+An argument with an implicit value may also have <strong>antonyms</strong>, which invert the
 semantics of the primary name.
-For example, some CLI tools also have a "-{}-quiet" option which disables verbose output
+For example, some CLI tools also have a "--quiet" option which disables verbose output
 and possible disables some non-verbose output.
+</p>
 
-\textbf{Typed Value} \textit{(common name: N/A)}:
+<p>
+<strong>Typed Value</strong> <em>(common name: N/A)</em>:<br />
 Some languages allow or require associating a type with an argument, in which case the
 value provided by the caller must be compatible with that type.
+</p>
 
-\textbf{Destructuring} \textit{(common names: Pattern, Unpacking)}:
+<p>
+<strong>Destructuring</strong> <em>(common names: Pattern, Unpacking)</em>:<br />
 Some languages provide a mechanism to break a composite structure into its component
 parts.
 In some cases this functionality is specified by the author, in others by the caller.
@@ -465,22 +466,26 @@ The difference is whether the author decides how the value is destructured (as i
 of Rust's patterns) or the caller does (as in the case of Python's argument unpacking).
 It is theoretically possible for a language to provide both of these variants
 simultaneously.
+</p>
 
-\textbf{Variadic Function} \textit{(common name: N/A)}:
+<p>
+<strong>Variadic Function</strong> <em>(common name: N/A)</em>:<br />
 A function which can accept an arbitrary number of values.
 Variadic functions are distinct from arguments with default values because with default
 values the author controls the range of acceptable argument counts and each value provided
 by the caller is bound to a different local variable.
 With variadic functions, the caller can pass in an arbitrarily large number of arguments
 (physical limitations notwithstanding) and the values are typically aggregated into a
-container; the variable bound to this container is the \textbf{variadic variable}.
-\textbf{Variadic values} are values which are associated with this feature.
+container; the variable bound to this container is the <strong>variadic variable</strong>.
+<strong>Variadic values</strong> are values which are associated with this feature.
 For example, a variadic function may require one positional value at the beginning of the
 value list.
 The first value is not a variadic value but all other values are.
+</p>
 
-\subsection{Structure of Paper}
+<h3 class="subsection-heading">Structure of Paper</h3>
 
+<p>
 The remainder of this paper will be divided into 3 parts: Description, Analysis, and
 Implementation.
 The purpose of these parts is to first understand what the current state of the craft is,
@@ -493,3 +498,4 @@ The analysis section compares these approaches to each other and comments on the
 appropriateness of each approach for different contexts.
 The implementation section describes how the framework was developed and how it operates
 in practice.
+</p>

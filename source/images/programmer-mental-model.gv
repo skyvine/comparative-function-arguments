@@ -1,0 +1,16 @@
+digraph {
+	Name        [shape=circle]
+	Explanation [shape=circle]
+	Argument    [shape=circle]
+	Parameter   [shape=circle]
+
+	Name -> Explanation
+	Name -> Argument
+	Name -> Parameter
+
+	Explanation -> Name
+	Argument    -> Name
+	Parameter   -> Name
+
+	Argument -> Parameter [color=green]
+}

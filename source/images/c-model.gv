@@ -1,0 +1,7 @@
+digraph {
+	Argument    [shape=circle]
+	Parameter   [shape=circle]
+
+	Argument -> Parameter [color=green]
+}
+

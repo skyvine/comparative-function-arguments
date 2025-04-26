@@ -1,0 +1,22 @@
+.author-tagline {
+	font-style: italic;
+}
+
+span.footnote-indicator + span.footnote,
+span.citation-indicator + span.citation {
+	display:    none;
+	position:   absolute;
+	font-style: italic;
+	background: white;
+	border:     solid;
+}
+
+span.footnote-indicator:hover + span.footnote,
+span.citation-indicator:hover + span.citation {
+	display: block;
+}
+
+span.footnote:hover,
+span.citation:hover {
+	display: block;
+}

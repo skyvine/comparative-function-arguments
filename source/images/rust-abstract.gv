@@ -1,0 +1,23 @@
+digraph {
+	Argument             [shape=circle]
+	Value                [shape=circle]
+	"Type (point)"       [shape=circle]
+	"Member (x)"         [shape=circle]
+	"Member (y)"         [shape=circle]
+	"Local Variable (h)" [shape=circle]
+	"Local Variable (v)" [shape=circle]
+
+	Argument             -> Value
+	Argument             -> "Type (point)"
+	Argument             -> "Local Variable (h)"
+	Argument             -> "Local Variable (v)"
+	Value                -> Argument
+	"Type (point)"       -> Argument
+	"Local Variable (h)" -> Argument
+	"Local Variable (v)" -> Argument
+	"Member (x)"         -> "Type (point)"
+	"Member (y)"         -> "Type (point)"
+	"Type (point)"       -> "Member (x)"
+	"Type (point)"       -> "Member (y)"
+}
+

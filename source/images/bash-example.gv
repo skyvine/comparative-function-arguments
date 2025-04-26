@@ -1,0 +1,17 @@
+digraph {
+	Argument               [shape=circle]
+	"Long Option"          [shape=circle]
+	"Short Option"         [shape=circle]
+	Value                  [shape=circle]
+	"Environment Variable" [shape=circle]
+
+	Argument               -> "Long Option"
+	"Long Option"          -> Argument               [color=green]
+	Argument               -> "Short Option"
+	"Short Option"         -> Argument               [color=green]
+	Argument               -> Value                  [color=purple]
+	Value                  -> Argument               [color=purple]
+	Argument               -> "Environment Variable" [color=orange]
+	"Environment Variable" -> Argument
+}
+

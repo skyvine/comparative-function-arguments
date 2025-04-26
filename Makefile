@@ -1,9 +1,13 @@
 .PHONY: shell
+
+paper:
+	guix time-machine --channels=./channels.scm -- shell --pure guix -- guix build -f package.scm -r build
+
 shell:
-	guix time-machine --channels=./channels.scm -- shell --pure --manifest=examples/manifest.scm -- bash
+	guix time-machine --channels=./channels.scm -- shell --pure --manifest=manifest.scm -- bash
 
 examples:
 	echo TODO
 
-paper:
-	cd prose && ./build.sh
+clean:
+	rm build
