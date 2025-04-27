@@ -98,15 +98,15 @@ The below table explains the contents of the array that each instruction referen
 
 <pre>
 \begin{tabularx}{\columnwidth}{r X}
-	\texttt{LOAD\_CONST}  &
+	<code>LOAD_CONST</code>  &
 		Constant values which appear literally or implicitly in source code
 		\parencite[][Doc/library/dis.rst lines 964-966]{python-source}. \\
-	\texttt{LOAD\_FAST}   &
+	<code>LOAD_FAST</code>   &
 		Names of local variables which are guaranteed to be initialized.
 		\parencite[][Doc/library/dis.rst lines 1253-1259,
 		             Lib/inspect.py line 514
 		]{python-source} \\
-	\texttt{LOAD\_NAME}   &
+	<code>LOAD_NAME</code>   &
 		Names of non-local variables.
 		If a local variable exists with the same name as a non-local variable then the value
 		bound to the local variable will be returned.
@@ -317,7 +317,7 @@ value names by callers and increased maintenance burden for library authors.
 
 <p>
 Inappropriate use of value names includes using non-meaningful names, such as a math
-function that takes one argument (the \texttt{sqrt} function takes one argument named
+function that takes one argument (the <code>sqrt</code> function takes one argument named
 <code>x</code>).
 It also includes providing values in an illogical order, such as calling the
 <code>range</code> function and supplying the <code>stop</code> value before the
@@ -342,9 +342,9 @@ variadic one.
 </p>
 
 <p>
-Finally, the PEP notes the curious case of the \texttt{range} function, which the PEP
+Finally, the PEP notes the curious case of the <code>range</code> function, which the PEP
 describes as accepting "an optional parameter to the left of its required parameter."
-In particular, if the \texttt{range} function only receives a single argument it is
+In particular, if the <code>range</code> function only receives a single argument it is
 interpreted as the end of the range, but if it receives 2 arguments then the first is
 interpreted as the start while the second is interpreted as the end.
 This concern does not appear to be addressed by PEP 570<span class="footnote-indicator">*
@@ -481,8 +481,8 @@ These are referred to as "keyword-only arguments".
 
 <h5 class="subsubsection-heading">Syntax & Semantics</h5>
 <p>
-Callers provide named values by writing first a symbolic name, then a literal \texttt{=},
-then the value.
+Callers provide named values by writing first a symbolic name, then a literal
+<code>=</code>, then the value.
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
@@ -490,8 +490,8 @@ then the value.
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>.
-Function authors specify keyword-only arguments by listing a literal \texttt{*} before the
-first keyword-only argument.
+Function authors specify keyword-only arguments by listing a literal <code>*</code> before
+the first keyword-only argument.
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
@@ -524,8 +524,8 @@ add_values_mixed(1000, named=1001)
 The bytecode for function definitions is identical regardless of the presence of
 keyword-only arguments.
 The restriction is enforced within the <code>CALL</code> instruction.
-In particular, the helper function \texttt{initialize\_locals} checks that the number of
-positional arguments is not more than expected
+In particular, the helper function <code>initialize_locals</code> checks that the number
+of positional arguments is not more than expected
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
@@ -533,7 +533,7 @@ positional arguments is not more than expected
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>
-by checking the \texttt{co\_argcount} member which tracks the number of arguments which
+by checking the <code>co_argcount</code> member which tracks the number of arguments which
 may be positional
 <span class="citation-indicator">
 	(PySource)
@@ -744,8 +744,8 @@ Caller destructuring is only available for iterables and mappings.
 
 <h5 class="subsubsection-heading">Syntax & Semantics</h5>
 <p>
-This feature allows a caller to prefix one or more iterables with \texttt{*} in order to
-translate their contents into a set of positional values, and/or prefix one or more
+This feature allows a caller to prefix one or more iterables with <code>*</code> in order
+to translate their contents into a set of positional values, and/or prefix one or more
 mappings with <code>**</code> to translate their contents into a set of named values.
 For mappings, keys must strings naming an argument.
 <span class="citation-indicator">
@@ -998,8 +998,8 @@ def distance((x1, y1), (x2, y2)):
 <p>
 This function would require that callers pass in 2 values which are both tuples containing
 2 elements.
-The values from the first tuple would be bound to local variables \texttt{x1} and
-<code>y1</code>, while the values from the second would be bound to \texttt{x2} and
+The values from the first tuple would be bound to local variables <code>x1</code> and
+<code>y1</code>, while the values from the second would be bound to <code>x2</code> and
 <code>y2</code>.
 </p>
 
