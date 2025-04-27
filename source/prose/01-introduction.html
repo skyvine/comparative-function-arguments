@@ -39,10 +39,11 @@ which is guaranteed to contain data of type <code>Point</code>.
 
 <p>
 When it is useful, programmers can also specify an argument by a
-pattern<span class="footnote-indicator">*</span>
+pattern<span class="footnote-indicator">*
 	<span class="footnote">
 	(technically the "plain name" is also a pattern, just a very simple one)
 	</span>
+</span>
 and type:
 </p>
 
@@ -103,36 +104,40 @@ the above deficiencies?
 The definition provided by the C standard is a good place to start: it precisely defines 2
 relevant terms, parameter and argument
 It defines a parameter as an
-<q>object<span class="footnote-indicator">*</span>
-<span class="footnote">
-	Use of the term "object" here refers to any region of memory, not the concept of an
-	object popularized by object-oriented programming.
+<q>object<span class="footnote-indicator">*
+	<span class="footnote">
+		Use of the term "object" here refers to any region of memory, not the concept of an
+		object popularized by object-oriented programming.
+	</span>
 </span>
 declared as part of a function declaration or definition that acquires a value on
 entry to the function, or an identifier from the comma-separated list bounded by the
 parentheses immediately following the macro name in a function-like macro
 definition</q>
-<span class="citation-indicator">(C17)</span>
-<span class="citation">
-	Section 3.16<br/>
-	!!INCLUDE references/c17.html!!
+<span class="citation-indicator">(C17)
+	<span class="citation">
+		Section 3.16<br/>
+		!!INCLUDE references/c17.html!!
+	</span>
 </span>.
 It defines an argument as an
 <q>expression in the comma-separated list bounded by the parentheses in a function
 call expression, or a sequence of preprocessing tokens in the comma-separated list bounded
 by the parentheses in a function-like macro invocation</q>
-<span class="citation-indicator">(C17)</span>
-<span class="citation">
-	Section 3.3<br/>
-	!!INCLUDE references/c17.html!!
+<span class="citation-indicator">(C17)
+	<span class="citation">
+		Section 3.3<br/>
+		!!INCLUDE references/c17.html!!
+	</span>
 </span>.
 Additionally, the standard defines a relationship between arguments and parameters:
 <q>In preparing for the call to a function, the arguments are evaluated, and each parameter
 is assigned the value of the corresponding argument</q>
-<span class="citation-indicator">(C17)</span>
-<span class="citation">
-	Section 6.5.2.2<br/>
-	!!INCLUDE references/c17.html!!
+<span class="citation-indicator">(C17)
+	<span class="citation">
+		Section 6.5.2.2<br/>
+		!!INCLUDE references/c17.html!!
+	</span>
 </span>.
 We could visualize the description with the below diagram.
 </p>
@@ -368,10 +373,11 @@ environment I used while creating this paper.
 It pins to a specific revision of the main Guix channel so that updates do not interfere
 with reproducibility.
 The Makefile within the "examples" directory launches a
-pure shell<span class="footnote-indicator">*</span>
-<span class="footnote">
-	(Here, "pure" means that enviornment conditions such as variables are unset so that the
-	shell does not use any artifacts from the base operating system by mistake.)
+pure shell<span class="footnote-indicator">*
+	<span class="footnote">
+		(Here, "pure" means that enviornment conditions such as variables are unset so that
+		the shell does not use any artifacts from the base operating system by mistake.)
+	</span>
 </span>
 for the user so that environmental factors do not interfere with reproducibility.
 </p>
@@ -379,10 +385,11 @@ for the user so that environmental factors do not interfere with reproducibility
 <p>
 The git repository also contains the bibtex file used to generate references in this
 paper.
-This source file contains additional information<span class="footnote-indicator">*</span>
-<span class="footnote">
-	(I intend to incorporate this information into the references in the final version of
-	this paper, but I have not used Latex before so I will need to learn how to do that.)
+This source file contains additional information<span class="footnote-indicator">*
+	<span class="footnote">
+		(I intend to incorporate this information into the references in the final version of
+		this paper, but I have not used Latex before so I will need to learn how to do that.)
+	</span>
 </span>
 which is not present in the output, such
 as the SHA256 of referenced tarballs and the commit hash of source repositories.
@@ -422,13 +429,14 @@ the caller declines to supply a value.
 
 <p>
 <strong>Named Value</strong> <em>(common name: Keyword Argument, Option
-Argument<span class="footnote-indicator">*</span>
-<span class="footnote">
-	(The term "option argument" is not to be confused with the term
-	"option<strong>al</strong> argument". The former is used by shell users to refer to an
-	argument that come after an option (such as "--ignore" "foo" in the previous example)
-	while an option<strong>al</strong> argument is a term used by scripters and system
-	programmers to refer to an argument associated with a default value.)
+Argument<span class="footnote-indicator">*
+	<span class="footnote">
+		(The term "option argument" is not to be confused with the term
+		"option<strong>al</strong> argument". The former is used by shell users to refer to an
+		argument that come after an option (such as "--ignore" "foo" in the previous example)
+		while an option<strong>al</strong> argument is a term used by scripters and system
+		programmers to refer to an argument associated with a default value.)
+	</span>
 </span>
 )</em>:<br />
 These values are associated with an argument based on a name which the caller attaches to

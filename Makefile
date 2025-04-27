@@ -1,6 +1,7 @@
 .PHONY: shell
 
 paper:
+	rm -f build
 	guix time-machine --channels=./channels.scm -- shell --pure guix -- guix build -f package.scm -r build
 
 shell:

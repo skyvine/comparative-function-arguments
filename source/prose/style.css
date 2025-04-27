@@ -2,8 +2,8 @@
 	font-style: italic;
 }
 
-span.footnote-indicator + span.footnote,
-span.citation-indicator + span.citation {
+span.footnote-indicator > span.footnote,
+span.citation-indicator > span.citation {
 	display:    none;
 	position:   absolute;
 	font-style: italic;
@@ -11,8 +11,8 @@ span.citation-indicator + span.citation {
 	border:     solid;
 }
 
-span.footnote-indicator:hover + span.footnote,
-span.citation-indicator:hover + span.citation {
+span.footnote-indicator:hover > span.footnote,
+span.citation-indicator:hover > span.citation {
 	display: block;
 }
 
