@@ -1,0 +1,1471 @@
+<h3 class="section-heading">Guile</h3>
+
+TODO:<br/>
+<ul>
+	<li>Find citation to guile-source that should be guile-2-0-source</li>
+</ul>
+
+<p>
+Guile provides the following features:
+</p>
+
+<ul>
+	<li>Destructuring</li>
+	<li>Named Value</li>
+	<li>Default Values</li>
+	<li>Positional Value</li>
+	<li>Typed Values</li>
+	<li>Variadic Functions</li>
+</ul>
+
+<p>
+All code samples were compiled with the partial-evaluation optimization turned off.
+This is because partial evaluation frequently removes the function call itself as the
+return values can be calculated at compile-time.
+</p>
+
+<p>
+Additionally, bytecode listings include comments which help explain what the instruction
+is doing.
+The meaning of the comment depends on the instruction.
+For example, the <code>make-immediate</code> bytecode instruction copies a literal static
+value onto the stack.
+It contains a comment which indicates the value loaded:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(make-immediate 4 4002)         ;; 1000
+</pre></code>
+
+<p>
+While the <code>call-scm&lt;-scm-scm</code>, which is pronounced "Call scheme from scheme
+scheme" to signify that it is calling a built-in function that returns a scheme value and
+accepts two scheme values as input, includes the name of the built-in function it is
+calling:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(call-scm&lt;-scm-scm 8 8 7 111)   ;; lookup-bound
+</pre></code>
+
+<p>
+Note that the <code>alloc-frame</code> instruction will contain a comment referring to the
+number of "slots" that the frame has; this refers to the size of the stack after the
+instruction finishes executing.
+</p>
+
+<p>
+These comments are helpfully added by the Guile decompiler.
+</p>
+
+<h4 class="subsection-heading">Background</h4>
+
+<p>
+Guile implements the Scheme programming language, which is a dialect of Lisp.
+Scheme was originally described in a 1975 paper for demonstrative purposes
+<span class="citation-indicator">
+	(r0rs)
+	<span class="citation">
+		Page 1.<br/>
+		!!INCLUDE references/r0rs.html!!
+	</span>
+</span>
+Interest in the language led to a series of revisions to the original description and,
+eventually, standardization.
+These papers are refered to as "Revised Reports on Scheme", abbreviated to
+"r<sup>N</sup>rs" where the N is replaced with a number representing the revision
+count.
+For example, the most recently published version of the standard is the 7th revision of
+the Scheme programming language so it is referred to as "r<sup>7</sup>rs".
+</p>
+
+<p>
+Guile was originally implemented as an interpreter which worked with a literal
+representation of a program's text
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.3.1 "Why a VM?"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+A virtual machine was added to Guile in the 2.0 release (2010)
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 5068-5071<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+and was rewritten for the 2.2 release (2017)
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+Modern Guile implements a compiler which produces bytecode, an interpreter which executes
+bytecode, and an interpreter which directly executes program text
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		modules/language/scheme/spec.scm lines 43-45<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+This paper will focus on compiled bytecode as this keeps the analysis consistent with
+other sections and is the typical way to execute Guile
+code<span class="footnote-indicator">*
+	<span class="footnote">
+	For example, running <code>guile script-name</code> will first compile the script then
+	run the compiled file rather than running the script directly.
+	</span>.
+</span>
+</p>
+
+<p>
+Guile bytecode operates as a stack machine with 2 pointers into the stack: the frame
+pointer and the stack pointer.
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.3.2 "VM Concepts"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+The frame pointer stores a location near<span class="footnote-indicator">*
+	<span class="footnote">
+	It is "near" the beginning rather than "at" the beginning because some metadata is
+	stored before the frame pointer's location; this metadata will not be relevant to this
+	paper.
+	</span>
+</span>
+the beginning of the frame, where each frame represents a single function call.
+The stack pointer keeps track of the end of the stack, like a pointer to the end of an
+array
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.3.3 "Stack Layout"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+When instructions take an index, they differ in whether they take in an index relative to
+the stack pointer or the frame pointer
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.3.5 "Compiled Procedures are VM Programs"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+This paper will always reference indexes relative to the stack pointer for the sake of
+consistency; this has the effect that frames start at a higher index and end at a lower
+index.
+For example, in the simple call the frame pointer, associated with the beginning of the
+stack, is moved to index 5 while the stack pointer, associated with the end of the stack,
+is moved to index 2.
+</p>
+
+<p>
+Guile produces different kinds of call instructions based on the call's location.
+Code samples in the repository were intentionally crafted to ensure that they always
+produced the plain <code>call</code> instruction; irrelevant parts of the code (such as a
+constant value placed after the call) are omitted from this paper.
+</p>
+
+<h5 class="subsubsection-heading">The optargs module</h5>
+
+<p>
+Many of the features described in this paper are provided through Guile's
+<code>optargs</code> module, which was introduced in version 1.3.2 (1999)
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 11451-11525<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+At this time, Guile lacked a virtual machine and the module was implemented in pure
+scheme.
+This implementation operated by adding a prelude to the function definiton which searches
+through the values provided by the caller to decide which values should be assigned to
+which variables
+<span class="citation-indicator">
+	(guile-1.3.2-source)
+	<span class="citation">
+		ice-9/optargs.scm<br/>
+		!!INCLUDE references/guile-1-3-2-source.html!!
+	</span>
+</span>.
+The virtual machine was added to Guile in version 2.0.0 (2010)
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 5068-5071<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+This also entailed a rewrite of the <code>optargs</code> module which centered the
+implementation around the internal <code><lambda-case></code> strucure.
+This structure contains all the information about the different kinds of arguments
+accepted by the function and facilitates the use of special-purpose VM instructions for
+processing arguments efficiently
+<span class="citation-indicator">
+	(guile-devel-archive)
+	<span class="citation">
+		2009-10 lines 6428-6453<br/>
+		!!INCLUDE references/guile-devel-archive.html!!
+	</span>
+</span>.
+While the VM has gone through changes since then, including a complete rewrite in version
+2.2
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+the implementation of the <code>optargs</code> module has remained stable.
+The special-purpose VM instructions have been adapted to handle the details of VM
+operation correctly and decrease latency, but the core logic used to process arguments has
+proven to be robust.
+</p>
+
+<h4 class="subsection-heading">Simple Function and Call</h4>
+
+<code data-programming-language="lisp"><pre>
+(define (add-values a b)
+  (+ a b))
+
+(add-values 1000 1001)
+</pre></code>
+
+<p>
+The bytecode generated for the function definition is fairly straightforward.
+</p>
+
+<code data-programming-language="lisp"><pre>
+0 (call-scm&lt;-scm-scm 1 1 0 0)     ;; add
+1 (reset-frame 1)                 ;; 1 slot
+2 (handle-interrupts)
+3 (return-values)
+</pre></code>
+
+<p>
+Instruction 0 calls the built-in function <code>add</code> (which corresponds to the
+<code>+</code> function) and places the result into index 0
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		liguile/vm-engine.c lines 1545-1549<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+</p>
+
+<p>
+Instruction 1 resizes the stack so that it contains 1 element - in this case, the return
+value
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c lines 797-802<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+Instruction 2 ensures that Guile properly handles signals like Ctrl-C (SIGINT) and
+code instrumentation
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 6.22.3  "Asynchronous Interrupts"<br/>
+		Section 9.3.7.6 "Instrumentation Instructions"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>
+it can be safely ignored here and it will not be mentioned again.
+</p>
+
+<p>
+Finally, the <code>return-values</code> instruction moves the flow of execution back to
+the caller.
+Counterintutively, it does not actually handle moving the return values to
+specific locations; it only sets the frame and instruction pointers to the caller's
+values
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c lines 530-555<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+The bytecode generated for the call to <code>add-values</code> is more complicated because
+it is calling a user-defined function.
+It needs to load the function and its arguments<span class="footnote-indicator">*
+	<span class="footnote">
+		The function definition did not have to manage the arguments for the built-in call
+		because built-in calls take values from arbitrary stack locations which are specified
+		in the instruction arguments, so the caller-supplied locations were reusable.
+	</span>
+</span>,
+then dispatch to the function.
+</p>
+
+<code data-programming-language="lisp"><pre>
+0 (static-ref 7 16324)            ;; add-values
+1 (call-scm&lt;-scm-scm 8 8 7 111)   ;; lookup-bound
+2 (scm-ref/immediate 5 8 1)
+3 (make-immediate 4 4002)         ;; 1000
+4 (make-immediate 3 4006)         ;; 1001
+5 (handle-interrupts)
+6 (call 3 3)
+</pre></code>
+
+<p>
+Instruction 0 loads the literal string <code>"add-values"</code> into index 7
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c line 2125-2129<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+</p>
+
+<p>
+Instruction 1 looks up the value associated with the name <code>add-values</code> and
+stores it in index 8
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c  lines 1545-1549<br/>
+		libguile/intrinsics.c lines 374-37<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+
+The value includes both the procedure itself and some associated metadata; instruction 2
+retrieves the procedure itself and stores it in index 5
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c  lines 1906-1910<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+</p>
+
+<p>
+Instructions 3-4 place the constant values 1000 and 1001 into indices 4 and 3, respectively.
+At this point the most relevant portion of the stack looks like this:
+</p>
+
+<pre>
+\begin{center}
+	\begin{tabular}{ | c | c | }
+		\hline
+		Index & Value \\
+		\hline
+		5     & #&lt;procedure add-values&gt; \\
+		4     & 1000 \\
+		3     & 1001 \\
+		\hline
+	\end{tabular}
+\end{center}
+</pre>
+
+<p>
+Finally, instruction 6 calls the function; internally, this involves moving the frame
+pointer to index 5 (where the procedure is stored) and the stack pointer to index 2 (the
+new end of the stack, which is smaller for the callee than for the caller)
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c lines 451-454<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<h4 class="subsection-heading">Caller Destructuring</h4>
+
+<p>
+Provided through the <code>apply</code> function. This allows a caller to provide
+a list which is destructured into a set of positional arguments.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+Destructuring in guile has a simple interface, as <code>apply</code> is simply a function
+that takes in a function as the first value, then any number of arbitrary values, and
+requires a possibly empty list as the final value.
+For example, all of these are equivalent:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(add-values 3 4)
+(apply add-values 3 '(4))
+(apply add-values '(3 4))
+</pre></code>
+
+<p>
+However, this would be an error because the final value is not a list:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(apply add-values 3 4)
+</pre></code>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+<code>apply</code> operates by first collecting all of the positional arguments into a
+single list, with the final value as the tail of the list, and sending them to
+<code>scm_call_n</code><span class="footnote-indicator">*
+	<span class="footnote">
+		A typical guile programmer (such as myself) who is familiar with the dotted list
+		syntax or the <code>#:rest</code> argument (both described in the section on variadic
+		functions) might be confused by the C-level API of the apply function.
+		It takes 2 required arguments and a rest argument.
+		The apply function takes any number of arguments and requires that the final argument
+		is a list.
+		Oddly, the body of the function simply calls <code>cons*</code> on the second required
+		argument and the rest argument; one might expect that this would cause the
+		user-provided list to be preserved instead of flattened.
+		However, when a C-level function is registered with a rest argument in guile it
+		receives an improper list of arguments, rather than the proper list provided when
+		<code>#:rest</code> is given to <code>define*</code>.
+		See the file <code>examples/guile/c-gsubr-rest.scm</code> (and its corresponding c
+		file) in the paper's repository for a demonstration.
+		The reason for this discrepency is not clear but the API of <code>scm_apply</code>
+		makes sense now.
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/eval.c lines 585-622, lines 715-729<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+This function is responsible for setting up the VM stack correctly
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm.c lines 1542-1621<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+For example, these lines save the frame's metadata and add the arguments to the correct
+stack positions:
+</p>
+
+<code data-programming-language="c"><pre>
+SCM_FRAME_SET_VIRTUAL_RETURN_ADDRESS (call_fp, vp-&gt;ip);
+SCM_FRAME_SET_MACHINE_RETURN_ADDRESS (call_fp, 0);
+SCM_FRAME_SET_DYNAMIC_LINK (call_fp, return_fp);
+SCM_FRAME_LOCAL (call_fp, 0) = proc;
+for (i = 0; i < nargs; i++)
+  SCM_FRAME_LOCAL (call_fp, i + 1) = argv[i];
+</pre></code>
+
+<p>
+These tasks are handled by different components in the simple call.
+The frame's metadata is typically set by the <code>call</code> instruction , while the
+arguments are added to the stack by the by separate instructions such as
+<code>make-immediate</code> or <code>scm-ref</code>.
+</p>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+The notion of list destructuring with <code>apply</code> was included in the original
+paper defining the lisp programming language
+<span class="citation-indicator">
+	(original-lisp-paper)
+	<span class="citation">
+		Pages 189-190<br/>
+		!!INCLUDE references/original-lisp-paper.html!!
+	</span>
+</span>.
+This original definition took exactly 2 parameters, a function and a list containing the
+arguments.
+r<sup>2</sup>rs extended this by allowing the caller to pass any number of values
+between the function and the list
+<span class="citation-indicator">
+	(r2rs)
+	<span class="citation">
+		Page 57<br/>
+		!!INCLUDE references/r2rs.html!!
+	</span>
+</p>
+
+<p>
+In the original interpreter, Guile simply called the function after manually unpacking the
+arguments
+<span class="citation-indicator">
+	(guile-first-commit)
+	<span class="citation">
+		libguile/eval.c lines 1869-1985<br/>
+		!!INCLUDE references/guile-first-commit.html!!
+	</span>
+</span>
+With the release of Guile 2.0, which added the virtual machine
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 5068-5071<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+the <code>apply</code> function delegated to <code>scm_call_with_vm</code>, a dedicated
+C-level helper function for calling scheme-level functions
+<span class="citation-indicator">
+	(guile-2-0-source)
+	<span class="citation">
+		libguile/eval.c lines 782-802<br/>
+		!!INCLUDE references/guile-2-0-source.html!!
+	</span>
+</span>.
+This was replaced with the <code>scm_call_n</code> function as part of a refactoring which
+removed explicit references to the VM from many locations in C code as well as eliminating
+VM visibility from scheme code
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit 165d9bf3a3bf34b53ed916743c6414f8030320c3 and earlier commits found
+		with <code>git log libguile/eval.c</code>.<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+The reason for this change is not explicitly stated in the commit messages but is likely
+related to performance improvements attributed to a rewrite of the virtual machine in the
+Guile 2.2 release notes
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 1995-2004, 2124-2205<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+</p>
+
+<h4 class="subsection-heading">Author Destructuring</h4>
+
+<p>
+This feature is not provided by Guile.
+</p>
+
+<h4 class="subsection-heading">Implicit Value</h4>
+
+<p>
+This feature is not provided by Guile.
+</p>
+
+<h4 class="subsection-heading">Named Value</h4>
+
+<p>
+Provided through the <code>#:key</code> arguments to <code>optargs</code> definitions.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+The caller must use the name specified by the author, which will also be the name used by
+the local variable<span class="footnote-indicator">*
+	<span class="footnote">
+	The caller uses a keyword to name the value while the author uses a symbol to name the
+	variable, as normal, but they both use the same name.
+	</span>
+</span>.
+When an author mandates a named value they also implicitly create a default value.
+Details about default values are described in the appropriate section; for the purpose of
+named values all we need to know is that if a caller omits a value then the local variable
+will be bound to <code>#:false</code>.
+For example, an author of <code>add-values</code> could allow named values like this:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values #:key a b)
+  (+ (or a 0) (or b 0)))
+</pre></code>
+
+<p>
+This function could be called in any of the following ways, with the result shown in the
+proceeding comment:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(add-values)             ; 0
+(add-values #:a 3)       ; 3
+(add-values #:b 3)       ; 3
+(add-values #:a 3 #:b 3) ; 6
+</pre></code>
+
+<p>
+However, these would not be legal:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(add-values 3)
+(add-values 2 #:b 2)
+</pre></code>
+
+<p>
+When an author specifies that a value <em>can</em> be named this also means that it
+<em>must</em> be named, if it is provided at all.
+</p>
+
+<p>
+Additionally, an author may specify that a caller can supply arbitrary named values which
+are not specified in the function signature (and not bound to a local variable, unless
+the function is also variadic).
+This is done by adding <code>#:allow-other-keys</code><span class="footnote-indicator">*
+	<span class="footnote">
+		Ironically, while the optargs module does not support implicit values for user-defined
+		code, <code>#:allow-other-keys</code> is itself an implicit value.
+	</span>
+</span>.
+to the function signature.
+For example, a definition of <code>add-values</code> with this feature would allow all of
+the following calls to be legal, and they would all produce the value 6.
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values #:key a b #:allow-other-keys)
+  (+ (or a 0) (or b 0)))
+
+(add-values #:a 3 #:b 3)
+(add-values #:a 3 #:b 3 #:c 34)
+(add-values #:c 34 #:a 3 #:b 3)
+(add-values #:a 3 #:b 3 #:multiplier 88)
+</pre></code>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+When Guile compiles a procedure it stores the list of valid argument names next to the
+<code>SCM</code> object representing the code
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		<code>
+			libguile/vm-engine.c lines 734, 736, 743-745;
+			libbugile/vm.c       lines 1003, 1008-1009
+		</code><br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+When a function using named values is defined, the compiler adds additional instructions
+as a prelude in the definition.
+</p>
+
+<code data-programming-language="lisp"><pre>
+   0    (bind-kwargs 1 0 1 3 16351)     
+   1    (alloc-frame 3)                 ;; 3 slots
+   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
+   3    (jne 2)                         ;; -&gt; L1
+   4    (make-immediate 1 14)           ;; 3
+L1:
+   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
+   6    (jne 2)                         ;; -&gt; L2
+   7    (make-immediate 0 22)           ;; 5
+L2:
+   8    (call-scm&lt;-scm-scm 2 1 0 0)  ;; add
+   9    (reset-frame 1)                 ;; 1 slot
+  10    (handle-interrupts)             
+  11    (return-values)                 
+</pre></code>
+
+<p>
+Instruction 0, <code>bind-kwargs</code>, performs the bulk of the work required to process
+named values at runtime.
+First, it initializes all relevant local variables (eg, ones that have default values or
+are named) to the undefined value
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm.c lines 995-998<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+Next, it walks through the list of non-positional arguments with the assumption that every
+even-indexed item is a keyword naming an argument and binds the odd-indexed items to the
+appropriate variables<span class="footnote-indicator">*
+	<span class="footnote">
+		Technically, it assumes that alternating value are keywords, except that it will
+		silently ignore a non-keyword if <code>#:rest</code> is included in the procedure
+		definition.
+		However, I am currently focused on named values in isolation of other features.
+		<code>#:rest</code> is discussed in the section on variadic functions.
+	</span>
+</span>.
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm.c lines 1000-1037<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+Instruction 1 prepares the stack for the function call.
+</p>
+
+<p>
+Instructions 2-7 ensure that the local variables which come from named values are
+initialized properly; these instructions are actually about default values, not named
+values, so they are discussed in the appropriate section.
+</p>
+
+<p>
+Finally, instructions 8-11 are the body of the function as found in the simple definition.
+</p>
+
+<p>
+The bytecode for the call is largely similar to the simple call, except that it also
+sends the keywords as additional argument values to the function (while they are not
+considered values within the body of a <code>define*</code> form, they are values at this
+lower level):
+</p>
+
+<code data-programming-language="lisp"><pre>
+ 1 (call-scm&lt;-thread 8 62)         ;; current-module
+ 2 (static-ref 7 16324)            ;; add-values
+ 3 (call-scm&lt;-scm-scm 8 8 7 111)   ;; lookup-bound
+ 4 (scm-ref/immediate 5 8 1)
+ 5 (static-ref 4 16331)            ;; #:a
+ 6 (make-immediate 3 34)           ;; 8
+ 7 (static-ref 2 16340)            ;; #:b
+ 8 (make-immediate 1 38)           ;; 9
+ 9 (handle-interrupts)
+10 (call 3 5)
+</pre></code>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+Named values were introduced with the original implementation of the <code>optargs</code>
+module
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 11451-11525<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+In the original implementation, the <code>let-ok-template</code> helper function generated
+a scheme-level <code>let</code> (or <code>let*</code>) form which initially binds each
+variable name to either the default value supplied by the author or a fresh undefined
+variable
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit 7e01997e88c54216678271de36b1c2088377492d ice-9/optargs.scm lines 128-135<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+The <code>bindfilter</code> local in the <code>let-keyword-template</code> helper replaced
+these initial values with the values supplied by the caller
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit 7e01997e88c54216678271de36b1c2088377492d ice-9/optargs.scm lines 152-168<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+The current implementation is largely the same, except that it takes advantage of
+being able to directly manipulate the VM state from C code instead of using macros to
+mutate code syntactically.
+The maintainers decided to move the implementation from scheme to C in order to decrease
+the latency associated with a function call that uses named values
+<span class="citation-indicator">
+	(guile-devel-archive)
+	<span class="citation">
+		2009-10 lines 10053-10056, 14008-14009, 14139-14141<br/>
+		!!INCLUDE references/guile-devel-archive.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+One change, which may or may not be considered a bug fix, has to do with the way that
+Guile processes named values when the function also contains a variadic variable.
+Originally, Guile required that all named values precede all (other) variadic values.
+This was changed so that variadic values may be intermingled with named values, so long
+as variadic values are not keywords (unless <code>#:allow-other-keys</code> is set, in
+which case they may be keywords)
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit ff74e44ecba55f50b2c2c84bad2f13bed9489455<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<h4 class="subsection-heading">Default Value</h4>
+
+<p>
+Provided through both <code>#:optional</code> and <code>#:key</code>.
+When considering default values, both of these are semantically equivalent.
+The difference between them is whether values are passed by position or by name.
+This section will exclusively use <code>#:optional</code> because none of the functions
+used in the examples are complicated enough to benefit from named values.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+The default value for an argument can either be specified or unspecified.
+If it is unspecified it is <code>#false</code>.
+Arguments become associated with a default value by placing them after the
+<code>#:optional</code> keyword in a <code>define*</code> form.
+This verison of <code>add-values</code> demonstrates use of default values without
+specification.
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values #:optional a b)
+  (+ (or a 0) (or b 0)))
+</pre></code>
+
+<p>
+This function adds the given values, and the body of the function uses the value
+<code>0</code> if the caller omitted a vaule.
+</p>
+
+<p>
+However, it is idiomatic to specify a default value in the function signature rather than
+testing the truthiness of the value.
+This is done by specifying the argument with a list instead of a symbol.
+The first element is the symbol naming the local variable and the second element is the
+default value.
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values #:optional (a 0) (b 0))
+  (+ a b))
+</pre></code>
+
+<p>
+This version is semantically equivalent to the first.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+The bytecode for the function definition differs significantly.
+I will start with the bytecode for the function which includes default values in the
+signature as this version is simpler:
+</p>
+
+<code data-programming-language="lisp"><pre>
+   0    (bind-optionals 3)              ;; 2 args
+   1    (alloc-frame 3)                 ;; 3 slots
+   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
+   3    (jne 2)                         ;; -&gt; L1
+   4    (make-immediate 1 2)            ;; 0
+L1:
+   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
+   6    (jne 2)                         ;; -&gt; L2
+   7    (make-immediate 0 2)            ;; 0
+L2:
+   8    (call-scm&lt;-scm-scm 2 1 0 0)     ;; add
+   9    (reset-frame 1)                 ;; 1 slot
+  10    (handle-interrupts)
+  11    (return-values)
+</pre></code>
+
+<p>
+Instruction 0, <code>bind-optionals</code>, checks if the caller omitted any argument
+values.
+If so, it fills in the associated variables with the undefined value
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c lines 3213-3233<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+The next 2 sections, instructions 2-4 and 5-7, check whether or not the local variables
+associated with optional values are undefined; if so, they are filled with the default
+value specified by the author.
+</p>
+
+<p>
+Finally, instructions 8-11 are the body of the function as found in the simple call.
+</p>
+
+<p>
+The version which does not specify default values in the signature is similar, but
+contains additional (and repetitious) logic.
+</p>
+
+<code data-programming-language="lisp"><pre>
+ 0 (bind-optionals 3)              ;; 2 argss
+ 1 (alloc-frame 3)                 ;; 3 slots
+ 2 (immediate-tag=? 1 4095 2308)   ;; undefined?
+ 3 (jne 2)                         ;; -&gt; L1
+ 4 (make-immediate 1 4)            ;; #f
+L1:
+ 5 (immediate-tag=? 0 4095 2308)   ;; undefined?
+ 6 (jne 2)                         ;; -&gt; L2
+ 7 (make-immediate 0 4)            ;; #f
+L2:
+ 8 (immediate-tag=? 1 3839 4)      ;; false?
+ 9 (jne 2)                         ;; -&gt; L3
+10 (make-immediate 1 2)            ;; 0
+11 L3:
+12 (immediate-tag=? 0 3839 4)      ;; false?
+13 (jne 2)                         ;; -&gt; L4
+14 (make-immediate 0 2)            ;; 0
+L4:
+15 (call-scm&lt;-scm-scm 2 1 0 0)     ;; add
+16 (reset-frame 1)                 ;; 1 slot
+17 (handle-interrupts)             
+18 (return-values)                 
+</pre></code>
+
+<p>
+Instruction 0 is also <code>bind-optionals</code>.
+</p>
+
+<p>
+Instructions 2-7 fill in the default value but in this case the value is
+<code>#:false</code> rather than <code>0</code>.
+</p>
+
+<p>
+The next two sections check the argument values a second time and replace the argument
+value with <code>0</code> if it was false (instructions 8-14) - these represent the
+<code>or</code> statements in the source code.
+</p>
+
+<p>
+Instruction 15-18 are the body of the function as found in the simple call.
+</p>
+
+<p>
+The bytecode for calling a function using default values does not differ from the bytecode
+for the simple call.
+</p>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+Default values were included in the original <code>optargs</code> implementation
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 11451-11525<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+The semantics at that time were nearly identical to the current semantics.
+The one notable difference is that, in the case where the author does not define a
+default value and the caller does not supply one, the variable was not bound to any value.
+This was changed as part of merging a branch that was mostly concerned with how modules
+are handled.
+I was unable to find any record about the reason why this change was
+made<span class="footnote-indicator">*
+	<span class="footnote">
+		Marius Vollmer, the developer who authored the commit, was very kind in responding to
+		an email enquiring about this.
+		Unfortunately it has been more than 2 decades since the change was made and it was not
+		notable enough to warrant a place in permanent memory.
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit 296ff5e78b8322fe4bf00c5ec1497dc28da776b8<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-devel-archive)
+	<span class="citation">
+		2001-05 lines 11305-11313<br/>
+		!!INCLUDE references/guile-devel-archive.html!!
+	</span>
+</span>.
+This was included in the 1.8 release series (2006)<span class="footnote-indicator">*
+	<span class="footnote">
+		I infer that it was first added in 1.8 because commit
+		296ff5e78b8322fe4bf00c5ec1497dc28da776b8, which implements the change, is between
+		commit 0f24e75b73b9c0c745971de639a53748a395a1cb, which bumps the numbers in
+		GUILE-VERSION from 1.7 to 1.9 (guile uses odd numbers for development versions and
+		even numbers for release versions) and commit
+		c299f186ff9693fc88859daef037e3d94cc7c0ff, which adds content to the NEWS file
+		regarding changes new in 1.6.
+		However, I did not find any content in the NEWS file which discusses the change
+		(including in more recent release notes).
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>.
+</p>
+
+<h4 class="subsection-heading">Positional Value</h4>
+
+<p>
+Provided as the default mechanism for mapping values to arguments.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+The syntax and semantics for both calls and definitions are identical to the simple call.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+Guile does not explicitly enforce a restriction that values can only be supplied
+positionally.
+This is because, technically, all values are always supplied positionally.
+When a caller provides named values they are actually providing pairs of values: keywords
+as names and arbitrary values as values.
+For example, given this call it is impossible to say whether the caller is supplying
+named values or positional values:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(make-dictionary #:first  "one"
+                 #:second "two"
+                 #:third  "three")
+</pre></code>
+
+<p>
+This could be a valid call to a function with named values:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (make-dictionary #:key first second third)
+  (let ((result (make-hash-table)))
+    (hash-set! result #:first  first)
+    (hash-set! result #:second second)
+    (hash-set! result #:third  third)
+    result))
+</pre></code>
+
+<p>
+Or it could be a valid call to a function which takes 6 positional values:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (make-dictionary key0 val0
+                          key1 val1
+                          key2 val2)
+  (let ((result (make-hash-table)))
+    (hash-set! result key0 val0)
+    (hash-set! result key1 val1)
+    (hash-set! result key2 val2)
+    result))
+</pre></code>
+
+<p>
+From the perspective of this particular caller, it is impossible to determine which
+implementation is in use without inspecting the code<span class="footnote-indicator">*
+	<span class="footnote">
+		Of course, a caller who wanted to use different keywords in their dictionary would
+		notice the difference between these implmentations very quickly!
+	</span>
+</span>.
+</p>
+
+<p>
+However, it is likely that using named values for a function which does not accept them
+will result in an error.
+This is because names are themselves values and are unlikely to be the correct kind of
+value for the function.
+For example, this attempt to use named values resulted in an error because the local
+variable <code>a</code> is bound to the value <code>#:a</code>, which is not a valid input
+to <code>+</code>:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define (add-values a b)
+  (+ a b))
+
+(add-values #:a 5 #:b 7)
+; ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+; In procedure +: Wrong type argument in position 1: #:a
+</pre></code>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+The Scheme standard requires that implementations accept value positionally.
+This has been true since the original paper describing lisp
+<span class="citation-indicator">
+	(original-lisp-paper)
+	<span class="citation">
+		Pages 185-186<br/>
+		!!INCLUDE references/original-lisp-paper.html!!
+	</span>
+</span>.
+The stated motivation is to distinguish between "functions" and "forms".
+In that paper, a function is the abstract idea of a formula that can have concrete numbers
+applied to it.
+Traditionally, a form is syntactically identical to a formula, but it is meant to be a
+stand-in for whatever value the formula will resolve to in context.
+The differentiating syntax is taken from a previous work which had a similar concern and
+does not explicitly justify the postional notation<span class="footnote-indicator">*
+	<span class="footnote">
+		The decision to supply arguments positionally appears to derive from prior work
+		describing multi-argument functions as a series of functions which take in one of the
+		values and call the "next" function which will receieve the "next" value (this is
+		similar to the concept of currying used in some programming languages).
+		With this model, it is natural to write values positionally as they must be provided
+		in the correct order to ensure that each partial function operates correctly.
+		It's also worth noting that the examples of functions used in the paper are relatively
+		simple - they are all inlinable with the prose.
+		In the face of such simplicity, naming values would be verbose without much benefit.
+	</span>
+</span>
+<span class="citation-indicator">
+	(calculi-of-lambda-conversion)
+	<span class="citation">
+		Pages 3-7<br/>
+		!!INCLUDE references/calculi-of-lambda-conversion.html!!
+	</span>
+</span>
+</p>
+
+<p>
+While the semantics of positional arguments have remained the same, the implementation
+has changed significantly.
+In the oldest version of Guile available through source control, values are given to
+a function by collecting them into a list, then dispatching based on the number of
+values expected by the function
+<span class="citation-indicator">
+	(guile-first-commit)
+	<span class="citation">
+		libguile/eval.c lines 1822-2004<br/>
+		!!INCLUDE references/guile-first-commit.html!!
+	</span>
+</span>
+With the addition of the VM, values are given by putting them into a frame managed by the
+VM (eg, not a C-level frame), avoiding the need to create a list unless the function is
+variadic.
+</p>
+
+<h4 class="subsection-heading">Typed Value</h4>
+
+<p>
+This feature is provided by defining methods in the Guile Object-Oriented Programming
+System (GOOPS).
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+In GOOPS methods are not contained within classes.
+Instead, they are simply functions with type specifications.
+When an author defines a method, they can choose to specify a type by providing a
+two-element list in place of an argument name
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 8.6 "Methods and Generic Functons"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>.
+The first element of the list is the argument name and the second element is the class
+name.
+For example:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define-method (add-values (a <number>) (b <number>))
+  (+ a b))
+</pre></code>
+
+<p>
+This defines a method that will only be executed when it is called with exactly two
+arguments which are both numbers.
+The author can also define alternative implementations for different
+types<span class="footnote-indicator">*
+	<span class="footnote">
+		While overloading is generally out of scope for this paper, the implementation section
+		will not make sense without mentioning it.
+	</span>
+</span>.
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define-method (add-values (a <list>) (b <list>))
+  (append a b))
+</pre></code>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+Defining a method defines two separate functions: a generic which is responsible for
+method dispatching and the method which contains the body that the author defined
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 8.6 "Methods and Generic Functons"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>.
+A generic is an applicable struct (a structure which can be called like a function) which
+stores all methods which share a name
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		module/oop/goops.scm lines 2045-2245<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+When a caller uses that name with some arguments, the generic object searches all of the
+methods associated with that name for a signature with the best fit
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		module/oop/goops.scm lines 1381-1449<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+This indirectly causes an error if the caller provides a set of values which do not have a
+compatible type: the searching process will fail to find a match and print a message like
+this one:
+</p>
+
+<pre>
+ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+No applicable method for #<<generic> add-values (2)> in call (add-values foo bar)
+</pre>
+
+<p>
+The bytecode for calling a function with typed values is identical to the simple call.
+</p>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+GOOPS was first added to the Guile repository in version 1.6
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>.
+Its implementation was based on STklos, the object system for STK, and it was also
+influenced by CLOS, the object system for Common Lisp
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		module/oop/goops.scm lines 24-25<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-manual)
+	<span class="citation">
+		Section 8.0 "GOOPS"<br/>
+		!!INCLUDE references/guile-manual.html!!
+	</span>
+</span>.
+The original code<span class="footnote-indicator">*
+	<span class="footnote">
+		I am tentatively using 4b5d86e0334f6b8c0b37c55cf47a4cd30e7803e0 as the commit which 
+		"adds GOOPS".
+		This is somewhat fictitious; 9 commits prior
+		(fdd70ea97c142dc8db1e3f147ac6f5bd6ae157c6) changed the major version "due to the merge
+		of GOOPS".
+		However, at the time this commit was made no GOOPS files had been added; the version
+		number was adjusted in anticipation of the merge, not after the merge was complete.
+		I am choosing the other commit as representing the initial add of GOOPS to the
+		repository because it is the last consecutive commit which adds or modifies a GOOPS
+		file after the version adjustment.
+	</span>
+</span>.
+looks quite different from the modern version of the file due to changes in the core
+language, bug fixes, and refactorings for performance and readability.
+However, the underlying idea of storing all alternative implementations of a function in a
+structure that uses a type signature to implementation map has remained stable.
+</p>
+
+<h4 class="subsection-heading">Variadic Function</h4>
+
+<p>
+Provided by the "dotted list" syntax and the <code>#:rest</code> keyword in a
+<code>lambda*</code>.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+The <code>#:rest</code> syntax allows an author to define a variadic variable that will
+contain a (possibly empty) list of variadic values.
+The variadic variable must be declared after all other declarations.
+For example, this definition and call would have the following
+value<span class="footnote-indicator">*
+	<span class="footnote">
+		As the variadic variable contains a list, the below code uses <code>apply</code> to
+		destructure the list.
+		This is described in detail in the section on caller destructuring.
+	</span>
+</span>:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values a b #:rest variadic-variable)
+	(apply + a b variadic-variable)
+
+(add-values 1000 2001 1002 2003)
+; 6006
+</pre></code>
+
+<p>
+The dotted list syntax is similar, except that the author uses a single period instead of
+the <code>#:rest</code> keyword and this syntax works without <code>optargs</code>:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values a b . variadic-variable)
+	(apply + a b variadic-variable)
+
+(add-values 1000 2001 1002 2003)
+; 6006
+</pre></code>
+
+<p>
+Other than this syntactic difference, the two methods of defining a variadic function are
+identical.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+For definitions, the only notable difference from the simple function is the addition of
+the <code>bind-rest</code> instruction near the beginning of the body.
+This instruction takes values from the stack and constructs a new list which contains all
+of them; this list is bound to the variadic variable
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c lines 756-783<br/>
+		libguile/vm.c        lines 1041-1052<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<code data-programming-language="c"><pre>
+static SCM
+cons_rest (scm_thread *thread, uint32_t base)
+{
+  SCM rest = SCM_EOL;
+  uint32_t n = frame_locals_count (thread) - base;
+
+  while (n--)
+    rest = scm_inline_cons (thread, SCM_FRAME_LOCAL (thread-&gt;vm.fp, base + n),
+                            rest);
+
+  return rest;
+}
+</pre></code>
+
+<p>
+For calls, the bytecode is identical to the simple call.
+</p>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+The dotted list syntax was first described in r<sup>2</sup>rs, with the same
+semantics that are in use today
+<span class="citation-indicator">
+	(r2rs)
+	<span class="citation">
+		Page 13<br/>
+		!!INCLUDE references/r2rs.html!!
+	</span>
+</p>
+The <code>#:rest</code> syntax was originally used by other lisp dialects and
+implementations of Scheme; Guile provided it in the original release of the optargs module
+in order to ease the transition for programmers used to those languages
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit 0a852b9424f949575afecb19a391023acc63e635 NEWS lines 849-843<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+</p>
+
+<p>
+As described in the section on positional values, the oldest versions of Guile manually
+collected argument values into a Scheme-level list and dispatched based on the number of
+values given.
+This made it trivial for the interpreter to supply the variadic values by dropping
+elements from the front of the list of all arguments
+<span class="citation-indicator">
+	(guile-first-commit)
+	<span class="citation">
+		libguile/eval.c lines 1652-1655<br/>
+		!!INCLUDE references/guile-first-commit.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+When the VM was added in version 2.0, the <code>bind-rest</code> instruction was included.
+It performs essentially the same work as the current implementation
+<span class="citation-indicator">
+	(guile-2-0-source)
+	<span class="citation">
+		libguile/vm-i-system.c lines 718-732<br/>
+		!!INCLUDE references/guile-2-0-source.html!!
+	</span>
+</span>.
+</p>
