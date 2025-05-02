@@ -100,19 +100,32 @@ The below table explains the contents of the array that each instruction referen
 \begin{tabularx}{\columnwidth}{r X}
 	<code>LOAD_CONST</code>  &
 		Constant values which appear literally or implicitly in source code
-		\parencite[][Doc/library/dis.rst lines 964-966]{python-source}. \\
+		<span class="citation-indicator">
+		(PySource)
+		<span class="citation">
+			Doc/library/dis.rst lines 964-966<br/>
+			Python/ceval.c lines 1314-1536<br/>
+		</span> \\
 	<code>LOAD_FAST</code>   &
 		Names of local variables which are guaranteed to be initialized.
-		\parencite[][Doc/library/dis.rst lines 1253-1259,
-		             Lib/inspect.py line 514
-		]{python-source} \\
+		<span class="citation-indicator">
+		(PySource)
+		<span class="citation">
+			Doc/library/dis.rst lines 1253-1259,<br/>
+			Lib/inspect.py line 514<br/>
+			Python/ceval.c lines 1314-1536<br/>
+		</span> \\
 	<code>LOAD_NAME</code>   &
 		Names of non-local variables.
 		If a local variable exists with the same name as a non-local variable then the value
 		bound to the local variable will be returned.
-		\parencite[][Doc/library/dis.rst lines 969-972,
-		             Lib/inspect.py line 511
-		]{python-source}. \\
+		<span class="citation-indicator">
+		(PySource)
+		<span class="citation">
+			Doc/library/dis.rst lines 969-972<br/>
+			Lib/inspect.py line 511<br/>
+			Python/ceval.c lines 1314-1536<br/>
+		</span> \\
 \end{tabularx}
 </pre>
 
@@ -133,9 +146,12 @@ similarly unless the purpose of the variant is to change that specific behavior.
 		Receives an integer indicating the number of argument values provided by the caller.
 		The stack will contain the function to call followed by the argument values in
 		separate stack locations.
-		\parencite[][Doc/library/dis.rst lines 1398-1410,
-		             Python/ceval.c lines 1314-1536
-		]{python-source}. \\
+		<span class="citation-indicator">
+		(PySource)
+		<span class="citation">
+			Doc/library/dis.rst lines 1398-1410<br/>
+			Python/ceval.c lines 1314-1536<br/>
+		</span> \\
 \end{tabularx}
 </pre>
 
@@ -203,7 +219,7 @@ after the final positional-only argument
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
-		reference/compound\_stmts.html section 8.7 "Function Definitions"<br/>
+		reference/compound_stmts.html section 8.7 "Function Definitions"<br/>
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>
@@ -285,10 +301,13 @@ array
 
 <p>
 Positional values have always been available in Python and requires no special syntax to
-use.\footnote{Unfortunately, positional values are assumed to be the default method of
-passing arguments by most programmers, including language authors, so there is no good
-citation for this assertion.}
-</p>
+use.<span class="footnote-indicator">*
+	<span class="footnote">
+		Unfortunately, positional values are assumed to be the default method of
+		passing arguments by most programmers, including language authors, so there is no good
+		citation for this assertion.
+	</span>
+</span>.
 
 <p>
 PEP 570 introduced positional-only arguments
@@ -351,7 +370,13 @@ This concern does not appear to be addressed by PEP 570<span class="footnote-ind
 	<span class="footnote">
 		At least, I do not see anything that addresses it when I read the PEP and the
 		implementation of range still inspects the number of provided arguments manually
-		\parencite[][Objects/rangeobject.c lines 81-120]{python-source}.
+		<span class="citation-indicator">
+			(PySource)
+			<span class="citation">
+				Objects/rangeobject.c lines 81-120<br/>
+				!!INCLUDE references/python-source.html!!
+			</span>
+		</span>.
 	</span>
 </span>.
 </p>
@@ -370,7 +395,7 @@ name of an argument, then the value
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
-		reference/compound\_stmts.html section 8.7 "Function Definitions"<br/>
+		reference/compound_stmts.html section 8.7 "Function Definitions"<br/>
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>
@@ -495,7 +520,7 @@ the first keyword-only argument.
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
-		reference/compound\_stmts.html section 8.7 "Function Definitions"<br/>
+		reference/compound_stmts.html section 8.7 "Function Definitions"<br/>
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>.
@@ -529,7 +554,12 @@ of positional arguments is not more than expected
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
-		Python/ceval.c lines 1458-1462, trace\_call\_TO\_initialize\_locals<br/>
+		Python/ceval.c lines 1458-1462, trace_call_TO_initialize_locals<br/>
+		<code>
+			Trace from CALL implementation to initialize_locals definition:<br/>
+			Call to `_PyEvalFramePushAndInit` Python/bytecodes.c lines 2689-2691<br/>
+			Call to `initialize_locals`       Python/ceval.c     line  1594<br/>
+		</code>
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>
@@ -619,7 +649,6 @@ that positional values must precede named values
 
 <p>
 Named values were first introduced in Python 1.3
-\parencite[][]{python-source-1.3}.
 <span class="citation-indicator">
 	(Py1.3Source)
 	<span class="citation">
@@ -810,7 +839,7 @@ a mapping to destructure
 When it receives 1, there is a mapping to destructure which will be on the top of the
 stack.
 While the caller can use any mapping (and any number of mappings), 
-<code>CALL\_FUNCTION\_EX</code> will always see a single dictionary when it executes (the
+<code>CALL_FUNCTION_EX</code> will always see a single dictionary when it executes (the
 process which ensures this is discussed in more detail later in this section).
 The dictionary is turned into a set of keyword arguments by interpreting the keys as names
 identifying arguments.
@@ -862,7 +891,7 @@ stack
 	</span>
 </span>
 Then it adds the keys and values of each mapping object into this dictionary by repeatedly
-calling the <code>DICT\_MERGE</code> instruction.
+calling the <code>DICT_MERGE</code> instruction.
 For example, this code:
 </p>
 
@@ -871,7 +900,7 @@ add_values(*d)
 </pre></code>
 
 <p>
-Compiles to this bytecode (note that <code>BUILD\_MAP</code> receives the value 0 to
+Compiles to this bytecode (note that <code>BUILD_MAP</code> receives the value 0 to
 indicate that it is building an empty dictionary):
 </p>
 
@@ -1025,7 +1054,7 @@ variadic dictionary must be preceeded by a <code>**</code>
 <span class="citation-indicator">
 	(PyDoc)
 	<span class="citation">
-		reference/compound\_stmts.html section 8.7 "Function Definitions"<br/>
+		reference/compound_stmts.html section 8.7 "Function Definitions"<br/>
 		!!INCLUDE references/python-html-documentation.html!!
 	</span>
 </span>.
@@ -1077,7 +1106,6 @@ exists
 It distinguishes variadic named values from non-variadic named values by checking if the
 name is expected; the interpreter already has to keep track of this information because
 an unrecognized value name is considered an error for non-variadic functions
-\parencite[][]{python-source}.
 <span class="citation-indicator">
 	(PySource)
 	<span class="citation">
