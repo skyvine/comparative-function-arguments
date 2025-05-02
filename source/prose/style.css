@@ -20,3 +20,12 @@ span.footnote:hover,
 span.citation:hover {
 	display: block;
 }
+
+table {
+	border-collapse: collapse;
+}
+
+td {
+	border: 1px solid;
+	text-align: center;
+}

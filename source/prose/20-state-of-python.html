@@ -1,11 +1,5 @@
 <h3 class="section-heading">Python</h3>
 
-<strong>TODO:</strong>
-
-<ul>
-	<li>Tables (tabularx)</li>
-</ul>
-
 <p>
 Python provides the following features:
 </p>
@@ -96,38 +90,50 @@ associated with that name.
 The below table explains the contents of the array that each instruction references.
 </p>
 
-<pre>
-\begin{tabularx}{\columnwidth}{r X}
-	<code>LOAD_CONST</code>  &
-		Constant values which appear literally or implicitly in source code
-		<span class="citation-indicator">
-		(PySource)
-		<span class="citation">
-			Doc/library/dis.rst lines 964-966<br/>
-			Python/ceval.c lines 1314-1536<br/>
-		</span> \\
-	<code>LOAD_FAST</code>   &
-		Names of local variables which are guaranteed to be initialized.
-		<span class="citation-indicator">
-		(PySource)
-		<span class="citation">
-			Doc/library/dis.rst lines 1253-1259,<br/>
-			Lib/inspect.py line 514<br/>
-			Python/ceval.c lines 1314-1536<br/>
-		</span> \\
-	<code>LOAD_NAME</code>   &
-		Names of non-local variables.
-		If a local variable exists with the same name as a non-local variable then the value
-		bound to the local variable will be returned.
-		<span class="citation-indicator">
-		(PySource)
-		<span class="citation">
-			Doc/library/dis.rst lines 969-972<br/>
-			Lib/inspect.py line 511<br/>
-			Python/ceval.c lines 1314-1536<br/>
-		</span> \\
-\end{tabularx}
-</pre>
+<table>
+	<tbody>
+		<tr>
+			<td><code>LOAD_CONST</code></td>
+			<td>
+				Constant values which appear literally or implicitly in source code
+				<span class="citation-indicator">
+				(PySource)
+				<span class="citation">
+					Doc/library/dis.rst lines 964-966<br/>
+					Python/ceval.c lines 1314-1536<br/>
+				</span>
+			</td>
+		</tr>
+		<tr>
+			<td><code>LOAD_FAST</code></td>
+			<td>
+				Names of local variables which are guaranteed to be initialized.
+				<span class="citation-indicator">
+				(PySource)
+				<span class="citation">
+					Doc/library/dis.rst lines 1253-1259,<br/>
+					Lib/inspect.py line 514<br/>
+					Python/ceval.c lines 1314-1536<br/>
+				</span>
+			</td>
+		</tr>
+		<tr>
+			<td><code>LOAD_NAME</code></td>
+			<td>
+				Names of non-local variables.
+				If a local variable exists with the same name as a non-local variable then the
+				value bound to the local variable will be returned.
+				<span class="citation-indicator">
+				(PySource)
+				<span class="citation">
+					Doc/library/dis.rst lines 969-972<br/>
+					Lib/inspect.py line 511<br/>
+					Python/ceval.c lines 1314-1536<br/>
+				</span>
+			</td>
+		</tr>
+	</tbody>
+</table>
 
 <h5 class="subsubsection-heading"><code>CALL</code> family</h5>
 
@@ -140,20 +146,22 @@ only the plain <code>CALL</code> instruction and assumes that other instructions
 similarly unless the purpose of the variant is to change that specific behavior.
 </p>
 
-<pre>
-\begin{tabularx}{\columnwidth}{r X}
-	<code>CALL</code> &
-		Receives an integer indicating the number of argument values provided by the caller.
-		The stack will contain the function to call followed by the argument values in
-		separate stack locations.
-		<span class="citation-indicator">
-		(PySource)
-		<span class="citation">
-			Doc/library/dis.rst lines 1398-1410<br/>
-			Python/ceval.c lines 1314-1536<br/>
-		</span> \\
-\end{tabularx}
-</pre>
+<table>
+	<tbody>
+		<td><code>CALL</code></td>
+		<td>
+			Receives an integer indicating the number of argument values provided by the caller.
+			The stack will contain the function to call followed by the argument values in
+			separate stack locations.
+			<span class="citation-indicator">
+			(PySource)
+			<span class="citation">
+				Doc/library/dis.rst lines 1398-1410<br/>
+				Python/ceval.c lines 1314-1536<br/>
+			</span>
+		</td>
+	</tbody>
+</table>
 
 <h4 class="subsection-heading">Simple Function and Call</h4>
 

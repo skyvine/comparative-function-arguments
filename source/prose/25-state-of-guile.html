@@ -390,19 +390,26 @@ Instructions 3-4 place the constant values 1000 and 1001 into indices 4 and 3, r
 At this point the most relevant portion of the stack looks like this:
 </p>
 
-<pre>
-\begin{center}
-	\begin{tabular}{ | c | c | }
-		\hline
-		Index & Value \\
-		\hline
-		5     & #&lt;procedure add-values&gt; \\
-		4     & 1000 \\
-		3     & 1001 \\
-		\hline
-	\end{tabular}
-\end{center}
-</pre>
+<table>
+	<tbody>
+		<tr>
+			<th>Index</th>
+			<th>Value</th>
+		</tr>
+		<tr>
+			<td>5</td>
+			<td>#&lt;procedure add-values&gt;</td>
+		</tr>
+		<tr>
+			<td>4</td>
+			<td>1000</td>
+		</tr>
+		<tr>
+			<td>3</td>
+			<td>1001</td>
+		</tr>
+	</tbody>
+</table>
 
 <p>
 Finally, instruction 6 calls the function; internally, this involves moving the frame
