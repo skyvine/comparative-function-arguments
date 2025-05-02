@@ -243,8 +243,7 @@ add_values_mixed(1000, b=1001)
 
 # invalid: the value for argument
 # "position" cannot be given by name
-# add_values_mixed(position=1000, \
-#                  either=1001)
+# add_values_mixed(position=1000, either=1001)
 </pre></code>
 
 <h5 class="subsubsection-heading">Implementation</h5>
@@ -1072,8 +1071,7 @@ variadic dictionary must be preceeded by a <code>**</code>
 from itertools import chain
 
 def add_values(*pos_vals, **named_vals):
-	return sum(chain(pos_vals, \
-	                 named_vals.values()))
+	return sum(chain(pos_vals, named_vals.values()))
 
 # All of these values appear in the
 # pos_values list
