@@ -7,8 +7,9 @@ span.citation-indicator > span.citation {
 	display:    none;
 	position:   absolute;
 	font-style: italic;
-	background: white;
-	border:     solid;
+	border:     1px solid;
+
+	max-width: min(98vw, 8in);
 }
 
 span.footnote-indicator:hover > span.footnote,
@@ -29,3 +30,33 @@ td {
 	border: 1px solid;
 	text-align: center;
 }
+
+* {
+	background-color: rgb(234, 219, 203);
+}
+
+body {
+	display: grid;
+	grid-template-areas: "left-sidepanel article right-sidepanel";
+
+	/* general advice is to specify things in relative units like rems. This is generally
+	 * good, but I am restricting the maximum width for the ergonomics of the eye. The eye
+	 * cares how far it has to travel to get to the next line, regardless of how many
+	 * characters happen to be on that line or how many pixels the monitor happens to need
+	 * in order to display the line. So in this case absolute units make sense.
+	 */
+	grid-template-columns: auto min(98vw, 8in) auto;
+}
+
+div.left-sidepanel {
+	grid-area: left-sidepanel;
+}
+
+article {
+	grid-area: article;
+}
+
+div.right-sidepanel {
+	grid-area: right-sidepanel;
+}
+
