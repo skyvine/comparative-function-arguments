@@ -1,6 +1,5 @@
 wip/
 build
-references
 
 *.bytecode.scm
 *.cps.scm
