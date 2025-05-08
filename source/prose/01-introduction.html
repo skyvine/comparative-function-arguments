@@ -372,27 +372,14 @@ The repository includes files appropriate for use with GNU Guix to reproduce the
 environment I used while creating this paper.
 It pins to a specific revision of the main Guix channel so that updates do not interfere
 with reproducibility.
-The Makefile within the "examples" directory launches a
-pure shell<span class="footnote-indicator">*
+Running <code>make shell</code> from the top-level directory launches a pure
+shell<span class="footnote-indicator">*
 	<span class="footnote">
 		(Here, "pure" means that enviornment conditions such as variables are unset so that
 		the shell does not use any artifacts from the base operating system by mistake.)
 	</span>
 </span>
 for the user so that environmental factors do not interfere with reproducibility.
-</p>
-
-<p>
-The git repository also contains the bibtex file used to generate references in this
-paper.
-This source file contains additional information<span class="footnote-indicator">*
-	<span class="footnote">
-		(I intend to incorporate this information into the references in the final version of
-		this paper, but I have not used Latex before so I will need to learn how to do that.)
-	</span>
-</span>
-which is not present in the output, such
-as the SHA256 of referenced tarballs and the commit hash of source repositories.
 </p>
 
 <h3 class="subsection-heading">Clarifying Terminology</h3>
