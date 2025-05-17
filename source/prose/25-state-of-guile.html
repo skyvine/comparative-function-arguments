@@ -1,4 +1,4 @@
-<h3 class="section-heading">Guile</h3>
+<h3 class="section-heading" id="state-of-guile">Guile</h3>
 
 <p>
 Guile provides the following features:
@@ -53,7 +53,7 @@ instruction finishes executing.
 These comments are helpfully added by the Guile decompiler.
 </p>
 
-<h4 class="subsection-heading">Background</h4>
+<h4 class="subsection-heading" id="state-of-guile-background">Background</h4>
 
 <p>
 Guile implements the Scheme programming language, which is a dialect of Lisp.
@@ -250,7 +250,7 @@ operation correctly and decrease latency, but the core logic used to process arg
 proven to be robust.
 </p>
 
-<h4 class="subsection-heading">Simple Function and Call</h4>
+<h4 class="subsection-heading" id="state-of-guile-simple-function-and-call">Simple Function and Call</h4>
 
 <code data-programming-language="lisp"><pre>
 (define (add-values a b)
@@ -419,183 +419,369 @@ new end of the stack, which is smaller for the callee than for the caller)
 </span>.
 </p>
 
-<h4 class="subsection-heading">Caller Destructuring</h4>
+<h4 class="subsection-heading" id="state-of-guile-positional-value">Positional Value</h4>
 
 <p>
-Provided through the <code>apply</code> function. This allows a caller to provide
-a list which is destructured into a set of positional arguments.
+Provided as the default mechanism for mapping values to arguments.
 </p>
 
 <h5 class="subsubsection-heading">Syntax & Semantics</h5>
 
 <p>
-Destructuring in guile has a simple interface, as <code>apply</code> is simply a function
-that takes in a function as the first value, then any number of arbitrary values, and
-requires a possibly empty list as the final value.
-For example, all of these are equivalent:
+The syntax and semantics for both calls and definitions are identical to the simple call.
 </p>
-
-<code data-programming-language="lisp"><pre>
-(add-values 3 4)
-(apply add-values 3 '(4))
-(apply add-values '(3 4))
-</pre></code>
-
-<p>
-However, this would be an error because the final value is not a list:
-</p>
-
-<code data-programming-language="lisp"><pre>
-(apply add-values 3 4)
-</pre></code>
 
 <h5 class="subsubsection-heading">Implementation</h5>
 
 <p>
-<code>apply</code> operates by first collecting all of the positional arguments into a
-single list, with the final value as the tail of the list, and sending them to
-<code>scm_call_n</code><span class="footnote-indicator">*
-	<span class="footnote">
-		A typical guile programmer (such as myself) who is familiar with the dotted list
-		syntax or the <code>#:rest</code> argument (both described in the section on variadic
-		functions) might be confused by the C-level API of the apply function.
-		It takes 2 required arguments and a rest argument.
-		The apply function takes any number of arguments and requires that the final argument
-		is a list.
-		Oddly, the body of the function simply calls <code>cons*</code> on the second required
-		argument and the rest argument; one might expect that this would cause the
-		user-provided list to be preserved instead of flattened.
-		However, when a C-level function is registered with a rest argument in guile it
-		receives an improper list of arguments, rather than the proper list provided when
-		<code>#:rest</code> is given to <code>define*</code>.
-		See the file <code>examples/guile/c-gsubr-rest.scm</code> (and its corresponding c
-		file) in the paper's repository for a demonstration.
-		The reason for this discrepency is not clear but the API of <code>scm_apply</code>
-		makes sense now.
-	</span>
-</span>
-<span class="citation-indicator">
-	(guile-source)
-	<span class="citation">
-		libguile/eval.c lines 585-622, lines 715-729<br/>
-		!!INCLUDE references/guile-source.html!!
-	</span>
-</span>.
-This function is responsible for setting up the VM stack correctly
-<span class="citation-indicator">
-	(guile-source)
-	<span class="citation">
-		libguile/vm.c lines 1542-1621<br/>
-		!!INCLUDE references/guile-source.html!!
-	</span>
-</span>.
-For example, these lines save the frame's metadata and add the arguments to the correct
-stack positions:
+Guile does not explicitly enforce a restriction that values can only be supplied
+positionally.
+This is because, technically, all values are always supplied positionally.
+When a caller provides named values they are actually providing pairs of values: keywords
+as names and arbitrary values as values.
+For example, given this call it is impossible to say whether the caller is supplying
+named values or positional values:
 </p>
 
-<code data-programming-language="c"><pre>
-SCM_FRAME_SET_VIRTUAL_RETURN_ADDRESS (call_fp, vp-&gt;ip);
-SCM_FRAME_SET_MACHINE_RETURN_ADDRESS (call_fp, 0);
-SCM_FRAME_SET_DYNAMIC_LINK (call_fp, return_fp);
-SCM_FRAME_LOCAL (call_fp, 0) = proc;
-for (i = 0; i < nargs; i++)
-  SCM_FRAME_LOCAL (call_fp, i + 1) = argv[i];
+<code data-programming-language="lisp"><pre>
+(make-dictionary #:first  "one"
+                 #:second "two"
+                 #:third  "three")
 </pre></code>
 
 <p>
-These tasks are handled by different components in the simple call.
-The frame's metadata is typically set by the <code>call</code> instruction , while the
-arguments are added to the stack by the by separate instructions such as
-<code>make-immediate</code> or <code>scm-ref</code>.
+This could be a valid call to a function with named values:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (make-dictionary #:key first second third)
+  (let ((result (make-hash-table)))
+    (hash-set! result #:first  first)
+    (hash-set! result #:second second)
+    (hash-set! result #:third  third)
+    result))
+</pre></code>
+
+<p>
+Or it could be a valid call to a function which takes 6 positional values:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (make-dictionary key0 val0
+                          key1 val1
+                          key2 val2)
+  (let ((result (make-hash-table)))
+    (hash-set! result key0 val0)
+    (hash-set! result key1 val1)
+    (hash-set! result key2 val2)
+    result))
+</pre></code>
+
+<p>
+From the perspective of this particular caller, it is impossible to determine which
+implementation is in use without inspecting the code<span class="footnote-indicator">*
+	<span class="footnote">
+		Of course, a caller who wanted to use different keywords in their dictionary would
+		notice the difference between these implmentations very quickly!
+	</span>
+</span>.
+</p>
+
+<p>
+However, it is likely that using named values for a function which does not accept them
+will result in an error.
+This is because names are themselves values and are unlikely to be the correct kind of
+value for the function.
+For example, this attempt to use named values resulted in an error because the local
+variable <code>a</code> is bound to the value <code>#:a</code>, which is not a valid input
+to <code>+</code>:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define (add-values a b)
+  (+ a b))
+
+(add-values #:a 5 #:b 7)
+; ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+; In procedure +: Wrong type argument in position 1: #:a
+</pre></code>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+The Scheme standard requires that implementations accept value positionally.
+This has been true since the original paper describing lisp
+<span class="citation-indicator">
+	(original-lisp-paper)
+	<span class="citation">
+		Pages 185-186<br/>
+		!!INCLUDE references/original-lisp-paper.html!!
+	</span>
+</span>.
+The stated motivation is to distinguish between "functions" and "forms".
+In that paper, a function is the abstract idea of a formula that can have concrete numbers
+applied to it.
+Traditionally, a form is syntactically identical to a formula, but it is meant to be a
+stand-in for whatever value the formula will resolve to in context.
+The differentiating syntax is taken from a previous work which had a similar concern and
+does not explicitly justify the postional notation<span class="footnote-indicator">*
+	<span class="footnote">
+		The decision to supply arguments positionally appears to derive from prior work
+		describing multi-argument functions as a series of functions which take in one of the
+		values and call the "next" function which will receieve the "next" value (this is
+		similar to the concept of currying used in some programming languages).
+		With this model, it is natural to write values positionally as they must be provided
+		in the correct order to ensure that each partial function operates correctly.
+		It's also worth noting that the examples of functions used in the paper are relatively
+		simple - they are all inlinable with the prose.
+		In the face of such simplicity, naming values would be verbose without much benefit.
+	</span>
+</span>
+<span class="citation-indicator">
+	(calculi-of-lambda-conversion)
+	<span class="citation">
+		Pages 3-7<br/>
+		!!INCLUDE references/calculi-of-lambda-conversion.html!!
+	</span>
+</span>
+</p>
+
+<p>
+While the semantics of positional arguments have remained the same, the implementation
+has changed significantly.
+In the oldest version of Guile available through source control, values are given to
+a function by collecting them into a list, then dispatching based on the number of
+values expected by the function
+<span class="citation-indicator">
+	(guile-first-commit)
+	<span class="citation">
+		libguile/eval.c lines 1822-2004<br/>
+		!!INCLUDE references/guile-first-commit.html!!
+	</span>
+</span>
+With the addition of the VM, values are given by putting them into a frame managed by the
+VM (eg, not a C-level frame), avoiding the need to create a list unless the function is
+variadic.
+</p>
+
+<h4 class="subsection-heading" id="state-of-guile-default-value">Default Value</h4>
+
+<p>
+Provided through both <code>#:optional</code> and <code>#:key</code>.
+When considering default values, both of these are semantically equivalent.
+The difference between them is whether values are passed by position or by name.
+This section will exclusively use <code>#:optional</code> because none of the functions
+used in the examples are complicated enough to benefit from named values.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+The default value for an argument can either be specified or unspecified.
+If it is unspecified it is <code>#false</code>.
+Arguments become associated with a default value by placing them after the
+<code>#:optional</code> keyword in a <code>define*</code> form.
+This verison of <code>add-values</code> demonstrates use of default values without
+specification.
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values #:optional a b)
+  (+ (or a 0) (or b 0)))
+</pre></code>
+
+<p>
+This function adds the given values, and the body of the function uses the value
+<code>0</code> if the caller omitted a vaule.
+</p>
+
+<p>
+However, it is idiomatic to specify a default value in the function signature rather than
+testing the truthiness of the value.
+This is done by specifying the argument with a list instead of a symbol.
+The first element is the symbol naming the local variable and the second element is the
+default value.
+</p>
+
+<code data-programming-language="lisp"><pre>
+(define* (add-values #:optional (a 0) (b 0))
+  (+ a b))
+</pre></code>
+
+<p>
+This version is semantically equivalent to the first.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+The bytecode for the function definition differs significantly.
+I will start with the bytecode for the function which includes default values in the
+signature as this version is simpler:
+</p>
+
+<code data-programming-language="lisp"><pre>
+   0    (bind-optionals 3)              ;; 2 args
+   1    (alloc-frame 3)                 ;; 3 slots
+   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
+   3    (jne 2)                         ;; -&gt; L1
+   4    (make-immediate 1 2)            ;; 0
+L1:
+   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
+   6    (jne 2)                         ;; -&gt; L2
+   7    (make-immediate 0 2)            ;; 0
+L2:
+   8    (call-scm&lt;-scm-scm 2 1 0 0)     ;; add
+   9    (reset-frame 1)                 ;; 1 slot
+  10    (handle-interrupts)
+  11    (return-values)
+</pre></code>
+
+<p>
+Instruction 0, <code>bind-optionals</code>, checks if the caller omitted any argument
+values.
+If so, it fills in the associated variables with the undefined value
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm-engine.c lines 3213-3233<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+The next 2 sections, instructions 2-4 and 5-7, check whether or not the local variables
+associated with optional values are undefined; if so, they are filled with the default
+value specified by the author.
+</p>
+
+<p>
+Finally, instructions 8-11 are the body of the function as found in the simple call.
+</p>
+
+<p>
+The version which does not specify default values in the signature is similar, but
+contains additional (and repetitious) logic.
+</p>
+
+<code data-programming-language="lisp"><pre>
+ 0 (bind-optionals 3)              ;; 2 argss
+ 1 (alloc-frame 3)                 ;; 3 slots
+ 2 (immediate-tag=? 1 4095 2308)   ;; undefined?
+ 3 (jne 2)                         ;; -&gt; L1
+ 4 (make-immediate 1 4)            ;; #f
+L1:
+ 5 (immediate-tag=? 0 4095 2308)   ;; undefined?
+ 6 (jne 2)                         ;; -&gt; L2
+ 7 (make-immediate 0 4)            ;; #f
+L2:
+ 8 (immediate-tag=? 1 3839 4)      ;; false?
+ 9 (jne 2)                         ;; -&gt; L3
+10 (make-immediate 1 2)            ;; 0
+11 L3:
+12 (immediate-tag=? 0 3839 4)      ;; false?
+13 (jne 2)                         ;; -&gt; L4
+14 (make-immediate 0 2)            ;; 0
+L4:
+15 (call-scm&lt;-scm-scm 2 1 0 0)     ;; add
+16 (reset-frame 1)                 ;; 1 slot
+17 (handle-interrupts)             
+18 (return-values)                 
+</pre></code>
+
+<p>
+Instruction 0 is also <code>bind-optionals</code>.
+</p>
+
+<p>
+Instructions 2-7 fill in the default value but in this case the value is
+<code>#:false</code> rather than <code>0</code>.
+</p>
+
+<p>
+The next two sections check the argument values a second time and replace the argument
+value with <code>0</code> if it was false (instructions 8-14) - these represent the
+<code>or</code> statements in the source code.
+</p>
+
+<p>
+Instruction 15-18 are the body of the function as found in the simple call.
+</p>
+
+<p>
+The bytecode for calling a function using default values does not differ from the bytecode
+for the simple call.
 </p>
 
 <h5 class="subsubsection-heading">Historical Record</h5>
 
 <p>
-The notion of list destructuring with <code>apply</code> was included in the original
-paper defining the lisp programming language
+Default values were included in the original <code>optargs</code> implementation
 <span class="citation-indicator">
-	(original-lisp-paper)
+	(guile-source)
 	<span class="citation">
-		Pages 189-190<br/>
-		!!INCLUDE references/original-lisp-paper.html!!
+		NEWS lines 11451-11525<br/>
+		!!INCLUDE references/guile-source.html!!
 	</span>
 </span>.
-This original definition took exactly 2 parameters, a function and a list containing the
-arguments.
-r<sup>2</sup>rs extended this by allowing the caller to pass any number of values
-between the function and the list
-<span class="citation-indicator">
-	(r2rs)
-	<span class="citation">
-		Page 57<br/>
-		!!INCLUDE references/r2rs.html!!
-	</span>
-</p>
-
-<p>
-In the original interpreter, Guile simply called the function after manually unpacking the
-arguments
-<span class="citation-indicator">
-	(guile-first-commit)
-	<span class="citation">
-		libguile/eval.c lines 1869-1985<br/>
-		!!INCLUDE references/guile-first-commit.html!!
+The semantics at that time were nearly identical to the current semantics.
+The one notable difference is that, in the case where the author does not define a
+default value and the caller does not supply one, the variable was not bound to any value.
+This was changed as part of merging a branch that was mostly concerned with how modules
+are handled.
+I was unable to find any record about the reason why this change was
+made<span class="footnote-indicator">*
+	<span class="footnote">
+		Marius Vollmer, the developer who authored the commit, was very kind in responding to
+		an email enquiring about this.
+		Unfortunately it has been more than 2 decades since the change was made and it was not
+		notable enough to warrant a place in permanent memory.
 	</span>
 </span>
-With the release of Guile 2.0, which added the virtual machine
 <span class="citation-indicator">
 	(guile-source)
 	<span class="citation">
-		NEWS lines 5068-5071<br/>
+		commit 296ff5e78b8322fe4bf00c5ec1497dc28da776b8<br/>
 		!!INCLUDE references/guile-source.html!!
 	</span>
 </span>
-the <code>apply</code> function delegated to <code>scm_call_with_vm</code>, a dedicated
-C-level helper function for calling scheme-level functions
 <span class="citation-indicator">
-	(guile-2.0-source)
+	(guile-devel-archive)
 	<span class="citation">
-		libguile/eval.c lines 782-802<br/>
-		!!INCLUDE references/guile-2-0-source.html!!
+		2001-05 lines 11305-11313<br/>
+		!!INCLUDE references/guile-devel-archive.html!!
 	</span>
 </span>.
-This was replaced with the <code>scm_call_n</code> function as part of a refactoring which
-removed explicit references to the VM from many locations in C code as well as eliminating
-VM visibility from scheme code
-<span class="citation-indicator">
-	(guile-source)
-	<span class="citation">
-		commit 165d9bf3a3bf34b53ed916743c6414f8030320c3 and earlier commits found
-		with <code>git log libguile/eval.c</code>.<br/>
-		!!INCLUDE references/guile-source.html!!
+This was included in the 1.8 release series (2006)<span class="footnote-indicator">*
+	<span class="footnote">
+		I infer that it was first added in 1.8 because commit
+		296ff5e78b8322fe4bf00c5ec1497dc28da776b8, which implements the change, is between
+		commit 0f24e75b73b9c0c745971de639a53748a395a1cb, which bumps the numbers in
+		GUILE-VERSION from 1.7 to 1.9 (guile uses odd numbers for development versions and
+		even numbers for release versions) and commit
+		c299f186ff9693fc88859daef037e3d94cc7c0ff, which adds content to the NEWS file
+		regarding changes new in 1.6.
+		However, I did not find any content in the NEWS file which discusses the change
+		(including in more recent release notes).
 	</span>
 </span>
-The reason for this change is not explicitly stated in the commit messages but is likely
-related to performance improvements attributed to a rewrite of the virtual machine in the
-Guile 2.2 release notes
 <span class="citation-indicator">
-	(guile-source)
+	(guile-manual)
 	<span class="citation">
-		NEWS lines 1995-2004, 2124-2205<br/>
-		!!INCLUDE references/guile-source.html!!
+		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
+		!!INCLUDE references/guile-manual.html!!
 	</span>
-</span>
+</span>.
 </p>
 
-<h4 class="subsection-heading">Author Destructuring</h4>
+<h4 class="subsection-heading" id="state-of-guile-implicit-value">Implicit Value</h4>
 
 <p>
 This feature is not provided by Guile.
 </p>
 
-<h4 class="subsection-heading">Implicit Value</h4>
-
-<p>
-This feature is not provided by Guile.
-</p>
-
-<h4 class="subsection-heading">Named Value</h4>
+<h4 class="subsection-heading" id="state-of-guile-named-value">Named Value</h4>
 
 <p>
 Provided through the <code>#:key</code> arguments to <code>optargs</code> definitions.
@@ -841,363 +1027,7 @@ which case they may be keywords)
 </span>.
 </p>
 
-<h4 class="subsection-heading">Default Value</h4>
-
-<p>
-Provided through both <code>#:optional</code> and <code>#:key</code>.
-When considering default values, both of these are semantically equivalent.
-The difference between them is whether values are passed by position or by name.
-This section will exclusively use <code>#:optional</code> because none of the functions
-used in the examples are complicated enough to benefit from named values.
-</p>
-
-<h5 class="subsubsection-heading">Syntax & Semantics</h5>
-
-<p>
-The default value for an argument can either be specified or unspecified.
-If it is unspecified it is <code>#false</code>.
-Arguments become associated with a default value by placing them after the
-<code>#:optional</code> keyword in a <code>define*</code> form.
-This verison of <code>add-values</code> demonstrates use of default values without
-specification.
-</p>
-
-<code data-programming-language="lisp"><pre>
-(define* (add-values #:optional a b)
-  (+ (or a 0) (or b 0)))
-</pre></code>
-
-<p>
-This function adds the given values, and the body of the function uses the value
-<code>0</code> if the caller omitted a vaule.
-</p>
-
-<p>
-However, it is idiomatic to specify a default value in the function signature rather than
-testing the truthiness of the value.
-This is done by specifying the argument with a list instead of a symbol.
-The first element is the symbol naming the local variable and the second element is the
-default value.
-</p>
-
-<code data-programming-language="lisp"><pre>
-(define* (add-values #:optional (a 0) (b 0))
-  (+ a b))
-</pre></code>
-
-<p>
-This version is semantically equivalent to the first.
-</p>
-
-<h5 class="subsubsection-heading">Implementation</h5>
-
-<p>
-The bytecode for the function definition differs significantly.
-I will start with the bytecode for the function which includes default values in the
-signature as this version is simpler:
-</p>
-
-<code data-programming-language="lisp"><pre>
-   0    (bind-optionals 3)              ;; 2 args
-   1    (alloc-frame 3)                 ;; 3 slots
-   2    (immediate-tag=? 1 4095 2308)   ;; undefined?
-   3    (jne 2)                         ;; -&gt; L1
-   4    (make-immediate 1 2)            ;; 0
-L1:
-   5    (immediate-tag=? 0 4095 2308)   ;; undefined?
-   6    (jne 2)                         ;; -&gt; L2
-   7    (make-immediate 0 2)            ;; 0
-L2:
-   8    (call-scm&lt;-scm-scm 2 1 0 0)     ;; add
-   9    (reset-frame 1)                 ;; 1 slot
-  10    (handle-interrupts)
-  11    (return-values)
-</pre></code>
-
-<p>
-Instruction 0, <code>bind-optionals</code>, checks if the caller omitted any argument
-values.
-If so, it fills in the associated variables with the undefined value
-<span class="citation-indicator">
-	(guile-source)
-	<span class="citation">
-		libguile/vm-engine.c lines 3213-3233<br/>
-		!!INCLUDE references/guile-source.html!!
-	</span>
-</span>.
-</p>
-
-<p>
-The next 2 sections, instructions 2-4 and 5-7, check whether or not the local variables
-associated with optional values are undefined; if so, they are filled with the default
-value specified by the author.
-</p>
-
-<p>
-Finally, instructions 8-11 are the body of the function as found in the simple call.
-</p>
-
-<p>
-The version which does not specify default values in the signature is similar, but
-contains additional (and repetitious) logic.
-</p>
-
-<code data-programming-language="lisp"><pre>
- 0 (bind-optionals 3)              ;; 2 argss
- 1 (alloc-frame 3)                 ;; 3 slots
- 2 (immediate-tag=? 1 4095 2308)   ;; undefined?
- 3 (jne 2)                         ;; -&gt; L1
- 4 (make-immediate 1 4)            ;; #f
-L1:
- 5 (immediate-tag=? 0 4095 2308)   ;; undefined?
- 6 (jne 2)                         ;; -&gt; L2
- 7 (make-immediate 0 4)            ;; #f
-L2:
- 8 (immediate-tag=? 1 3839 4)      ;; false?
- 9 (jne 2)                         ;; -&gt; L3
-10 (make-immediate 1 2)            ;; 0
-11 L3:
-12 (immediate-tag=? 0 3839 4)      ;; false?
-13 (jne 2)                         ;; -&gt; L4
-14 (make-immediate 0 2)            ;; 0
-L4:
-15 (call-scm&lt;-scm-scm 2 1 0 0)     ;; add
-16 (reset-frame 1)                 ;; 1 slot
-17 (handle-interrupts)             
-18 (return-values)                 
-</pre></code>
-
-<p>
-Instruction 0 is also <code>bind-optionals</code>.
-</p>
-
-<p>
-Instructions 2-7 fill in the default value but in this case the value is
-<code>#:false</code> rather than <code>0</code>.
-</p>
-
-<p>
-The next two sections check the argument values a second time and replace the argument
-value with <code>0</code> if it was false (instructions 8-14) - these represent the
-<code>or</code> statements in the source code.
-</p>
-
-<p>
-Instruction 15-18 are the body of the function as found in the simple call.
-</p>
-
-<p>
-The bytecode for calling a function using default values does not differ from the bytecode
-for the simple call.
-</p>
-
-<h5 class="subsubsection-heading">Historical Record</h5>
-
-<p>
-Default values were included in the original <code>optargs</code> implementation
-<span class="citation-indicator">
-	(guile-source)
-	<span class="citation">
-		NEWS lines 11451-11525<br/>
-		!!INCLUDE references/guile-source.html!!
-	</span>
-</span>.
-The semantics at that time were nearly identical to the current semantics.
-The one notable difference is that, in the case where the author does not define a
-default value and the caller does not supply one, the variable was not bound to any value.
-This was changed as part of merging a branch that was mostly concerned with how modules
-are handled.
-I was unable to find any record about the reason why this change was
-made<span class="footnote-indicator">*
-	<span class="footnote">
-		Marius Vollmer, the developer who authored the commit, was very kind in responding to
-		an email enquiring about this.
-		Unfortunately it has been more than 2 decades since the change was made and it was not
-		notable enough to warrant a place in permanent memory.
-	</span>
-</span>
-<span class="citation-indicator">
-	(guile-source)
-	<span class="citation">
-		commit 296ff5e78b8322fe4bf00c5ec1497dc28da776b8<br/>
-		!!INCLUDE references/guile-source.html!!
-	</span>
-</span>
-<span class="citation-indicator">
-	(guile-devel-archive)
-	<span class="citation">
-		2001-05 lines 11305-11313<br/>
-		!!INCLUDE references/guile-devel-archive.html!!
-	</span>
-</span>.
-This was included in the 1.8 release series (2006)<span class="footnote-indicator">*
-	<span class="footnote">
-		I infer that it was first added in 1.8 because commit
-		296ff5e78b8322fe4bf00c5ec1497dc28da776b8, which implements the change, is between
-		commit 0f24e75b73b9c0c745971de639a53748a395a1cb, which bumps the numbers in
-		GUILE-VERSION from 1.7 to 1.9 (guile uses odd numbers for development versions and
-		even numbers for release versions) and commit
-		c299f186ff9693fc88859daef037e3d94cc7c0ff, which adds content to the NEWS file
-		regarding changes new in 1.6.
-		However, I did not find any content in the NEWS file which discusses the change
-		(including in more recent release notes).
-	</span>
-</span>
-<span class="citation-indicator">
-	(guile-manual)
-	<span class="citation">
-		Section 9.1.4 "A Timeline of Selected Guile Releases"<br/>
-		!!INCLUDE references/guile-manual.html!!
-	</span>
-</span>.
-</p>
-
-<h4 class="subsection-heading">Positional Value</h4>
-
-<p>
-Provided as the default mechanism for mapping values to arguments.
-</p>
-
-<h5 class="subsubsection-heading">Syntax & Semantics</h5>
-
-<p>
-The syntax and semantics for both calls and definitions are identical to the simple call.
-</p>
-
-<h5 class="subsubsection-heading">Implementation</h5>
-
-<p>
-Guile does not explicitly enforce a restriction that values can only be supplied
-positionally.
-This is because, technically, all values are always supplied positionally.
-When a caller provides named values they are actually providing pairs of values: keywords
-as names and arbitrary values as values.
-For example, given this call it is impossible to say whether the caller is supplying
-named values or positional values:
-</p>
-
-<code data-programming-language="lisp"><pre>
-(make-dictionary #:first  "one"
-                 #:second "two"
-                 #:third  "three")
-</pre></code>
-
-<p>
-This could be a valid call to a function with named values:
-</p>
-
-<code data-programming-language="lisp"><pre>
-(define* (make-dictionary #:key first second third)
-  (let ((result (make-hash-table)))
-    (hash-set! result #:first  first)
-    (hash-set! result #:second second)
-    (hash-set! result #:third  third)
-    result))
-</pre></code>
-
-<p>
-Or it could be a valid call to a function which takes 6 positional values:
-</p>
-
-<code data-programming-language="lisp"><pre>
-(define* (make-dictionary key0 val0
-                          key1 val1
-                          key2 val2)
-  (let ((result (make-hash-table)))
-    (hash-set! result key0 val0)
-    (hash-set! result key1 val1)
-    (hash-set! result key2 val2)
-    result))
-</pre></code>
-
-<p>
-From the perspective of this particular caller, it is impossible to determine which
-implementation is in use without inspecting the code<span class="footnote-indicator">*
-	<span class="footnote">
-		Of course, a caller who wanted to use different keywords in their dictionary would
-		notice the difference between these implmentations very quickly!
-	</span>
-</span>.
-</p>
-
-<p>
-However, it is likely that using named values for a function which does not accept them
-will result in an error.
-This is because names are themselves values and are unlikely to be the correct kind of
-value for the function.
-For example, this attempt to use named values resulted in an error because the local
-variable <code>a</code> is bound to the value <code>#:a</code>, which is not a valid input
-to <code>+</code>:
-</p>
-
-<code data-programming-language="lisp"><pre>
-(define (add-values a b)
-  (+ a b))
-
-(add-values #:a 5 #:b 7)
-; ice-9/boot-9.scm:1685:16: In procedure raise-exception:
-; In procedure +: Wrong type argument in position 1: #:a
-</pre></code>
-
-<h5 class="subsubsection-heading">Historical Record</h5>
-
-<p>
-The Scheme standard requires that implementations accept value positionally.
-This has been true since the original paper describing lisp
-<span class="citation-indicator">
-	(original-lisp-paper)
-	<span class="citation">
-		Pages 185-186<br/>
-		!!INCLUDE references/original-lisp-paper.html!!
-	</span>
-</span>.
-The stated motivation is to distinguish between "functions" and "forms".
-In that paper, a function is the abstract idea of a formula that can have concrete numbers
-applied to it.
-Traditionally, a form is syntactically identical to a formula, but it is meant to be a
-stand-in for whatever value the formula will resolve to in context.
-The differentiating syntax is taken from a previous work which had a similar concern and
-does not explicitly justify the postional notation<span class="footnote-indicator">*
-	<span class="footnote">
-		The decision to supply arguments positionally appears to derive from prior work
-		describing multi-argument functions as a series of functions which take in one of the
-		values and call the "next" function which will receieve the "next" value (this is
-		similar to the concept of currying used in some programming languages).
-		With this model, it is natural to write values positionally as they must be provided
-		in the correct order to ensure that each partial function operates correctly.
-		It's also worth noting that the examples of functions used in the paper are relatively
-		simple - they are all inlinable with the prose.
-		In the face of such simplicity, naming values would be verbose without much benefit.
-	</span>
-</span>
-<span class="citation-indicator">
-	(calculi-of-lambda-conversion)
-	<span class="citation">
-		Pages 3-7<br/>
-		!!INCLUDE references/calculi-of-lambda-conversion.html!!
-	</span>
-</span>
-</p>
-
-<p>
-While the semantics of positional arguments have remained the same, the implementation
-has changed significantly.
-In the oldest version of Guile available through source control, values are given to
-a function by collecting them into a list, then dispatching based on the number of
-values expected by the function
-<span class="citation-indicator">
-	(guile-first-commit)
-	<span class="citation">
-		libguile/eval.c lines 1822-2004<br/>
-		!!INCLUDE references/guile-first-commit.html!!
-	</span>
-</span>
-With the addition of the VM, values are given by putting them into a frame managed by the
-VM (eg, not a C-level frame), avoiding the need to create a list unless the function is
-variadic.
-</p>
-
-<h4 class="subsection-heading">Typed Value</h4>
+<h4 class="subsection-heading" id="state-of-guile-typed-value">Typed Value</h4>
 
 <p>
 This feature is provided by defining methods in the Guile Object-Oriented Programming
@@ -1336,7 +1166,177 @@ However, the underlying idea of storing all alternative implementations of a fun
 structure that uses a type signature to implementation map has remained stable.
 </p>
 
-<h4 class="subsection-heading">Variadic Function</h4>
+<h4 class="subsection-heading" id="state-of-guile-caller-destructuring">Caller Destructuring</h4>
+
+<p>
+Provided through the <code>apply</code> function. This allows a caller to provide
+a list which is destructured into a set of positional arguments.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+Destructuring in guile has a simple interface, as <code>apply</code> is simply a function
+that takes in a function as the first value, then any number of arbitrary values, and
+requires a possibly empty list as the final value.
+For example, all of these are equivalent:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(add-values 3 4)
+(apply add-values 3 '(4))
+(apply add-values '(3 4))
+</pre></code>
+
+<p>
+However, this would be an error because the final value is not a list:
+</p>
+
+<code data-programming-language="lisp"><pre>
+(apply add-values 3 4)
+</pre></code>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+<code>apply</code> operates by first collecting all of the positional arguments into a
+single list, with the final value as the tail of the list, and sending them to
+<code>scm_call_n</code><span class="footnote-indicator">*
+	<span class="footnote">
+		A typical guile programmer (such as myself) who is familiar with the dotted list
+		syntax or the <code>#:rest</code> argument (both described in the section on variadic
+		functions) might be confused by the C-level API of the apply function.
+		It takes 2 required arguments and a rest argument.
+		The apply function takes any number of arguments and requires that the final argument
+		is a list.
+		Oddly, the body of the function simply calls <code>cons*</code> on the second required
+		argument and the rest argument; one might expect that this would cause the
+		user-provided list to be preserved instead of flattened.
+		However, when a C-level function is registered with a rest argument in guile it
+		receives an improper list of arguments, rather than the proper list provided when
+		<code>#:rest</code> is given to <code>define*</code>.
+		See the file <code>examples/guile/c-gsubr-rest.scm</code> (and its corresponding c
+		file) in the paper's repository for a demonstration.
+		The reason for this discrepency is not clear but the API of <code>scm_apply</code>
+		makes sense now.
+	</span>
+</span>
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/eval.c lines 585-622, lines 715-729<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+This function is responsible for setting up the VM stack correctly
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		libguile/vm.c lines 1542-1621<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>.
+For example, these lines save the frame's metadata and add the arguments to the correct
+stack positions:
+</p>
+
+<code data-programming-language="c"><pre>
+SCM_FRAME_SET_VIRTUAL_RETURN_ADDRESS (call_fp, vp-&gt;ip);
+SCM_FRAME_SET_MACHINE_RETURN_ADDRESS (call_fp, 0);
+SCM_FRAME_SET_DYNAMIC_LINK (call_fp, return_fp);
+SCM_FRAME_LOCAL (call_fp, 0) = proc;
+for (i = 0; i < nargs; i++)
+  SCM_FRAME_LOCAL (call_fp, i + 1) = argv[i];
+</pre></code>
+
+<p>
+These tasks are handled by different components in the simple call.
+The frame's metadata is typically set by the <code>call</code> instruction , while the
+arguments are added to the stack by the by separate instructions such as
+<code>make-immediate</code> or <code>scm-ref</code>.
+</p>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+The notion of list destructuring with <code>apply</code> was included in the original
+paper defining the lisp programming language
+<span class="citation-indicator">
+	(original-lisp-paper)
+	<span class="citation">
+		Pages 189-190<br/>
+		!!INCLUDE references/original-lisp-paper.html!!
+	</span>
+</span>.
+This original definition took exactly 2 parameters, a function and a list containing the
+arguments.
+r<sup>2</sup>rs extended this by allowing the caller to pass any number of values
+between the function and the list
+<span class="citation-indicator">
+	(r2rs)
+	<span class="citation">
+		Page 57<br/>
+		!!INCLUDE references/r2rs.html!!
+	</span>
+</p>
+
+<p>
+In the original interpreter, Guile simply called the function after manually unpacking the
+arguments
+<span class="citation-indicator">
+	(guile-first-commit)
+	<span class="citation">
+		libguile/eval.c lines 1869-1985<br/>
+		!!INCLUDE references/guile-first-commit.html!!
+	</span>
+</span>
+With the release of Guile 2.0, which added the virtual machine
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 5068-5071<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+the <code>apply</code> function delegated to <code>scm_call_with_vm</code>, a dedicated
+C-level helper function for calling scheme-level functions
+<span class="citation-indicator">
+	(guile-2.0-source)
+	<span class="citation">
+		libguile/eval.c lines 782-802<br/>
+		!!INCLUDE references/guile-2-0-source.html!!
+	</span>
+</span>.
+This was replaced with the <code>scm_call_n</code> function as part of a refactoring which
+removed explicit references to the VM from many locations in C code as well as eliminating
+VM visibility from scheme code
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		commit 165d9bf3a3bf34b53ed916743c6414f8030320c3 and earlier commits found
+		with <code>git log libguile/eval.c</code>.<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+The reason for this change is not explicitly stated in the commit messages but is likely
+related to performance improvements attributed to a rewrite of the virtual machine in the
+Guile 2.2 release notes
+<span class="citation-indicator">
+	(guile-source)
+	<span class="citation">
+		NEWS lines 1995-2004, 2124-2205<br/>
+		!!INCLUDE references/guile-source.html!!
+	</span>
+</span>
+</p>
+
+<h4 class="subsection-heading" id="state-of-guile-author-destructuring">Author Destructuring</h4>
+
+<p>
+This feature is not provided by Guile.
+</p>
+
+<h4 class="subsection-heading" id="state-of-guile-variadic-function">Variadic Function</h4>
 
 <p>
 Provided by the "dotted list" syntax and the <code>#:rest</code> keyword in a

@@ -1,4 +1,4 @@
-<h3 class="section-heading">Python</h3>
+<h3 class="section-heading" id="state-of-python">Python</h3>
 
 <p>
 Python provides the following features:
@@ -30,7 +30,7 @@ Python used to provide author destructuring for tuples, but this was removed in 
 3.0.
 </p>
 
-<h4 class="subsection-heading">Background</h4>
+<h4 class="subsection-heading" id="state-of-python-background">Background</h4>
 <p>
 Python has a compiler which produces bytecode
 <span class="citation-indicator">
@@ -167,7 +167,7 @@ similarly unless the purpose of the variant is to change that specific behavior.
 	</tbody>
 </table>
 
-<h4 class="subsection-heading">Simple Function and Call</h4>
+<h4 class="subsection-heading" id="state-of-python-simple-function-and-call">Simple Function and Call</h4>
 
 <code data-programming-language="python"><pre>
 def add_values(a, b):
@@ -203,7 +203,7 @@ LOAD_FAST    1 (b)
 BINARY_OP    0 (+)
 </pre>
 
-<h4 class="subsection-heading">Positional Value</h4>
+<h4 class="subsection-heading" id="state-of-python-positional-value">Positional Value</h4>
 
 <p>
 Provided by default.
@@ -392,7 +392,7 @@ This concern does not appear to be addressed by PEP 570<span class="footnote-ind
 </span>.
 </p>
 
-<h4 class="subsection-heading">Default Value</h4>
+<h4 class="subsection-heading" id="state-of-python-default-value">Default Value</h4>
 
 <p>
 Provided by default argument values.
@@ -497,7 +497,7 @@ the mailing list since 2021.
 </span>
 </p>
 
-<h4 class="subsection-heading">Named Value</h4>
+<h4 class="subsection-heading" id="state-of-python-named-value">Named Value</h4>
 
 <p>
 Provided through keyword arguments.
@@ -701,13 +701,13 @@ must be provided in every call even if the caller wants the default value of
 </span>.
 </p>
 
-<h4 class="subsection-heading">Implicit Value</h4>
+<h4 class="subsection-heading" id="state-of-python-implicit-value">Implicit Value</h4>
 
 <p>
 This feature is not provided by Python.
 </p>
 
-<h4 class="subsection-heading">Typed Value</h4>
+<h4 class="subsection-heading" id="state-of-python-typed-value">Typed Value</h4>
 
 <p>
 Provided through type hinting.
@@ -776,7 +776,7 @@ However, the core mechanism that this paper is concerned with - associating a ty
 argument, regardless of how that type is specified - remains unchanged.
 </p>
 
-<h4 class="subsection-heading">Caller Destructing</h4>
+<h4 class="subsection-heading" id="state-of-python-caller-destructuring">Caller Destructing</h4>
 <p>
 Provided through argument unpacking.
 Caller destructuring is only available for iterables and mappings.
@@ -1014,7 +1014,7 @@ either need to build iterables/dictionaries separately or destructure them manua
 adding additional lines of code which are semantically sparse.
 </p>
 
-<h4 class="subsection-heading">Author Destructuring</h4>
+<h4 class="subsection-heading" id="state-of-python-author-destructuring">Author Destructuring</h4>
 
 <p>
 While python does not currently support authorial destructuring, it did so prior to
@@ -1049,7 +1049,7 @@ The rationale includes multiple implementation issues which are important to the
 community but not relevant to this paper.
 </p>
 
-<h4 class="subsection-heading">Variadic Function</h4>
+<h4 class="subsection-heading" id="state-of-python-variadic-function">Variadic Function</h4>
 <p>
 Provided by arbitrary argument lists and dictionaries.
 Positional values are collected by the former while named values are collected by the
