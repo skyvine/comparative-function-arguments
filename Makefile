@@ -2,10 +2,12 @@
 
 paper:
 	rm -f build
-	guix time-machine --channels=./channels.scm -- shell --pure guix -- guix build -f package.scm -r build
+	if [ -e paper-root ]; then unlink paper-root; fi
+	guix time-machine --channels=./channels.scm -- shell --pure guix --root=paper-root -- guix build -f package.scm -r build
 
 shell:
-	guix time-machine --channels=./channels.scm -- shell --pure --manifest=manifest.scm -- bash
+	if [ -e shell-root ]; then unlink shell-root; fi
+	guix time-machine --channels=./channels.scm -- shell --pure --manifest=manifest.scm --root=shell-root -- bash
 
 examples:
 	echo TODO

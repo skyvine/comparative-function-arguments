@@ -5,3 +5,6 @@ build
 *.cps.scm
 *.tree-il.scm
 *.so
+
+paper-root
+shell-root
