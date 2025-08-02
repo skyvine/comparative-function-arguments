@@ -1,0 +1,118 @@
+<h3 class="section-heading" id="state-of-rust">Rust</h3>
+
+<p>
+Rust provides the following features:
+</p>
+
+<ul>
+	<li>Positional Value</li>
+	<li>Typed Value</li>
+	<li>Author Destructuring</li>
+</ul>
+
+<h4 class="subsection-heading" id="state-of-rust-background">Background</h4>
+<p>
+Rust has a compiler which produces native code.
+It does not have a stable ABI and does creating one is not considered desirable by the
+Rust developers
+<span class="citation-indicator">
+	(#600)
+	<span class="citation">
+		!!INCLUDE references/rust-issue-600.html!!
+	</span>
+</span>.
+When targeting Linux, the compiler appears to produce code that follows the System V ABI.
+</p>
+
+<p>
+Assembly code uses Intel-style syntax, for ease of use with the Intel Software Developer
+Manual.
+</p>
+
+<h4 class="subsection-heading" id="state-of-rust-simple-function-and-call">Simple Function and Call</h4>
+
+<code data-programming-language="rust"><pre>
+fn add_values(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+fn main() {
+    add_values(1000, 1001);
+}
+</pre></code>
+
+The assembly for the call to <code>add_values</code> does 2 things.
+First, it pushes the literal values 1000 and 1001 to the <code>edi</code> and
+<code>esi</code> registers, respectively.
+This follows the System V convention that the first 2 arguments are passed in these
+registers (the specification implicitly assumes that all arguments are positional)
+<span class="citation-indicator">
+	(SV-ABI)
+	<span class="citation">
+		Page 27.<br/>
+		!!INCLUDE references/system-v-abi-specification.html!!
+	</span>
+</span>.
+Then it calls the <code>add_values</code> function.
+
+<pre>
+mov    edi,0x3e8
+mov    esi,0x3e9
+call   7940 <_ZN6simple10add_values17h33b93751bca0b5fbE>
+</pre>
+
+The body of <code>add_values</code> does a number of things.
+First it pushed the <code>rax</code> register onto the stack; this conventionally contains
+the return value of function calls
+<span class="citation-indicator">
+	(SV-ABI)
+	<span class="citation">
+		Page 27.<br/>
+		!!INCLUDE references/system-v-abi-specification.html!!
+	</span>
+</span>.
+Next, it adds the give argumnets directly in the registers used to pass them and moves the
+result onto the stack using <code>rsp</code>, which conventionally contains the stack
+pointer
+<span class="citation-indicator">
+	(SV-ABI)
+	<span class="citation">
+		Page 27.<br/>
+		!!INCLUDE references/system-v-abi-specification.html!!
+	</span>
+</span>.
+The next two instructions, <code>seto</code> and <code>jo</code>, are used to handle
+overflows (in debug mode, Rust panics on an overflow).
+Assuming there is no overflow, the code then moves the result of the addition from the
+stack into the <code>eax</code><span class="footnote-indicator">*
+	<span class="footnote">
+		Note that <code>eax</code> is a subset of <code>rax</code>, so this is setting the
+		lower bits of the <code>rax<code> register; it is only setting the lower bits due to
+		the size of the integer specified in the code.
+	</span>
+</span>
+register.
+Finally, it moves the top of the stack into the <code>rcx</code> register<span class="footnote-indicator">*
+	<span class="footnote">
+		It is not clear why it is helpful to push into <code>rcx</code>; it is conventionally
+		used as the 4th positional argument and is not referenced at all in the calling site.
+	</span>
+</span>
+and returns to the calling site.
+
+<pre>
+0000000000007940 <_ZN6simple10add_values17h33b93751bca0b5fbE>:
+push   rax
+add    edi,esi
+mov    DWORD PTR [rsp+0x4],edi
+seto   al
+jo     7952 <_ZN6simple10add_values17h33b93751bca0b5fbE+0x12>
+mov    eax,DWORD PTR [rsp+0x4]
+pop    rcx
+ret    
+lea    rdi,[rip+0x4c5ef]        # 53f48 <_ZN3std3sys3pal4unix4args3imp15ARGV_INIT_ARRAY17hf0e4ba666b615240E+0x48>
+call   QWORD PTR [rip+0x4f061]        # 569c0 <_GLOBAL_OFFSET_TABLE_+0x1c0>
+nop
+</pre>
+
+

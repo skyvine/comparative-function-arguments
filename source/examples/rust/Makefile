@@ -5,3 +5,6 @@ intro-example: intro-example.rs
 
 simple: simple.rs
 	rustc -C linker=gcc simple.rs
+
+simple.dis: simple
+	objdump -M intel -d simple > simple.dis
