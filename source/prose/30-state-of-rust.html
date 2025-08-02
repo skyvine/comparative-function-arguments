@@ -115,4 +115,23 @@ call   QWORD PTR [rip+0x4f061]        # 569c0 <_GLOBAL_OFFSET_TABLE_+0x1c0>
 nop
 </pre>
 
+<h4 class="subsection-heading" id="state-of-guile-positional-value">Positional Value</h4>
 
+<p>
+Provided as the only way to pass arguments.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+Callers specify positional values by providing a comma-separated list of values.
+Authors specify local variable names with a corresponding list of comma-separated
+identifiers.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+The simple function and call use positional arguments; there are no additional features to
+examine here.
+</p>
