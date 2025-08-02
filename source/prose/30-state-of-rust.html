@@ -41,6 +41,7 @@ fn main() {
 }
 </pre></code>
 
+<p>
 The assembly for the call to <code>add_values</code> does 2 things.
 First, it pushes the literal values 1000 and 1001 to the <code>edi</code> and
 <code>esi</code> registers, respectively.
@@ -54,6 +55,7 @@ registers (the specification implicitly assumes that all arguments are positiona
 	</span>
 </span>.
 Then it calls the <code>add_values</code> function.
+</p>
 
 <pre>
 mov    edi,0x3e8
@@ -61,6 +63,7 @@ mov    esi,0x3e9
 call   7940 <_ZN6simple10add_values17h33b93751bca0b5fbE>
 </pre>
 
+<p>
 The body of <code>add_values</code> does a number of things.
 First it pushed the <code>rax</code> register onto the stack; this conventionally contains
 the return value of function calls
@@ -99,6 +102,7 @@ Finally, it moves the top of the stack into the <code>rcx</code> register<span c
 	</span>
 </span>
 and returns to the calling site.
+</p>
 
 <pre>
 0000000000007940 <_ZN6simple10add_values17h33b93751bca0b5fbE>:
