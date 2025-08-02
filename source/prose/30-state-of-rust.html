@@ -74,7 +74,7 @@ the return value of function calls
 		!!INCLUDE references/system-v-abi-specification.html!!
 	</span>
 </span>.
-Next, it adds the give argumnets directly in the registers used to pass them and moves the
+Next, it adds the give arguments directly in the registers used to pass them and moves the
 result onto the stack using <code>rsp</code>, which conventionally contains the stack
 pointer
 <span class="citation-indicator">
@@ -90,7 +90,7 @@ Assuming there is no overflow, the code then moves the result of the addition fr
 stack into the <code>eax</code><span class="footnote-indicator">*
 	<span class="footnote">
 		Note that <code>eax</code> is a subset of <code>rax</code>, so this is setting the
-		lower bits of the <code>rax<code> register; it is only setting the lower bits due to
+		lower bits of the <code>rax</code> register; it is only setting the lower bits due to
 		the size of the integer specified in the code.
 	</span>
 </span>
@@ -138,4 +138,145 @@ identifiers.
 <p>
 The simple function and call use positional arguments; there are no additional features to
 examine here.
+</p>
+
+<h4 class="subsection-heading" id="state-of-rust-author-destructuring">Author Destructing</h4>
+
+<p>
+In Rust both tuples and structs can be destructured by the author.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+For both tuples and structs the author specifies a pattern in place of a variable name:
+</p>
+
+<code data-programming-language="rust"><pre>
+fn add_values_tuple_destructured((a, b): &(i32, i32)) -> i32 {
+    a + b
+}
+
+struct Arguments {
+    a: i32,
+    b: i32,
+}
+
+fn add_values_struct_destructured(Arguments { a: a, b: b }: &Arguments) -> i32 {
+    a + b
+}
+</pre></code>
+
+<p>
+In each case a local variable is named based on the names in the left side of the colon.
+In the case of structs, the right side of the inner colons represents the name of the
+local variable while the left side represents the name of the member in the struct.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+Use of destructuring does not change how the argument is passed.
+In either case, a pointer to the given structure is passed using the expected register.
+For example, given the following function definitions:
+
+<code data-programming-language="rust"><pre>
+fn add_values_tuple(tuple: &(i32, i32)) -> i32 {
+    tuple.0 + tuple.1
+}
+
+fn add_values_tuple_destructured((a, b): &(i32, i32)) -> i32 {
+    a + b
+}
+
+fn add_values_struct(arguments: &Arguments) -> i32 {
+    arguments.a + arguments.b
+}
+
+fn add_values_struct_destructured(Arguments { a, b }: &Arguments) -> i32 {
+    a + b
+}
+</pre></code>
+
+<p>
+The calling site will always load the address of the structure into <code>rdi</code>:
+</p>
+
+<pre>
+lea    rdi,[rip+0x3e600]        # 46018 <_fini+0x24c>
+call   7970 <_ZN20author_destructuring16add_values_tuple17h78fb3f52970da270E>
+lea    rdi,[rip+0x3e5f4]        # 46018 <_fini+0x24c>
+call   79a0 <_ZN20author_destructuring29add_values_tuple_destructured17h565795344f78b8c3E>
+lea    rdi,[rip+0x3e5e8]        # 46018 <_fini+0x24c>
+call   79c0 <_ZN20author_destructuring17add_values_struct17h7b66a2e7b4d693a8E>
+lea    rdi,[rip+0x3e5dc]        # 46018 <_fini+0x24c>
+call   79f0 <_ZN20author_destructuring30add_values_struct_destructured17hfb478771134896efE>
+</pre>
+
+<p>
+However, the bodies of the functions differ slightly<span class="footnote-indicator">*
+	<span class="footnote">
+		The bodies are practically identical when comparing the tuple definitions to the
+		struct definitions.
+	</span>
+</span>
+when destructuring is used.
+When it is <em>not</em> used, the function looks similar to the simple function, except
+that it accumulates the values into <code>eax</code> by dereferencing the pointer in
+<code>edi</code> instead of using <code>edi</code> (and <code>esi</code>) directly:
+</p>
+
+<pre>
+push   rax
+mov    eax,DWORD PTR [rdi]     <---- pointer dereferenced>
+add    eax,DWORD PTR [rdi+0x4] <---- dereferenced with offset, for "second" argument>
+mov    DWORD PTR [rsp+0x4],eax <---- eax stored on the stack>
+seto   al
+jo     7985 <_ZN20author_destructuring16add_values_tuple17h78fb3f52970da270E+0x15>
+mov    eax,DWORD PTR [rsp+0x4] <---- eax restored from stack>
+pop    rcx
+ret    
+lea    rdi,[rip+0x4c574]        # 53f00 <_ZN3std3sys3pal4unix4args3imp15ARGV_INIT_ARRAY17hf0e4ba666b615240E+0x48>
+call   QWORD PTR [rip+0x4f02e]        # 569c0 <_GLOBAL_OFFSET_TABLE_+0x1c0>
+cs nop WORD PTR [rax+rax*1+0x0]
+nop    DWORD PTR [rax+0x0]
+</pre>
+
+<p>
+However, when destructuring <em>is</em> used, a pointer to the second value is loaded into
+<code>rsi</code> and a helper function is called:
+</p>
+
+<pre>
+push   rax
+mov    rsi,rdi <---- rsi initialized with rdi>
+add    rsi,0x4 <---- rsi offset by same offset as in the non-destructuring version>
+lea    rdx,[rip+0x4c569]        # 53f18 <_ZN3std3sys3pal4unix4args3imp15ARGV_INIT_ARRAY17hf0e4ba666b615240E+0x60>
+call   78d0    <---- helper function called> <_ZN49_$LT$$RF$i32$u20$as$u20$core..ops..arith..Add$GT$3add17h90bb72e1fc0da902E>
+pop    rcx
+ret    
+cs nop WORD PTR [rax+rax*1+0x0]
+</pre>
+
+<p>
+The helper function is similar to the accumulation performed in the non-destructured
+versions:
+</p>
+
+<pre>
+mov    eax,DWORD PTR [rdi]      <---- eax initialized with first argument>
+add    eax,DWORD PTR [rsi]      <---- second argument accumulated into eax>
+mov    DWORD PTR [rsp+0x14],eax <---- eax stored on the stack>
+seto   al
+jo     78ef <_ZN49_$LT$$RF$i32$u20$as$u20$core..ops..arith..Add$GT$3add17h90bb72e1fc0da902E+0x1f>
+mov    eax,DWORD PTR [rsp+0x14] <---- eax restored from stack>
+add    rsp,0x18
+ret    
+</pre>
+
+<p>
+The discrepency is a reasonable literal translation of destructuring into assembly code:
+instead of dereferencing the pointer inline, the second part of the pattern is moved into
+the second positional register and a helper function which takes 2 (theoretically
+unrelated) positional arguments is called.
 </p>
