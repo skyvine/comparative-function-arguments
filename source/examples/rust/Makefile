@@ -1,10 +1,12 @@
-all: intro-example simple
+.PHONY: all
+all: $(basename $(shell ls *.rs)) $(shell ls *.rs | sed 's/.rs/.dis/')
+	
 
-intro-example: intro-example.rs
-	rustc -C linker=gcc intro-example.rs
+%.dis: %
+	objdump -M intel -d $< > $@
 
-simple: simple.rs
-	rustc -C linker=gcc simple.rs
+%: %.rs
+	rustc -C linker=gcc $<
 
-simple.dis: simple
-	objdump -M intel -d simple > simple.dis
+clean:
+	rm -f $(basename $(shell ls *.rs)) *.dis
