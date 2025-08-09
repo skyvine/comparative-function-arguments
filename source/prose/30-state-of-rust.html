@@ -140,10 +140,157 @@ The simple function and call use positional arguments; there are no additional f
 examine here.
 </p>
 
+<h4 class="subsection-heading" id="state-of-rust-typed-value">Typed Value</h4>
+
+<p>
+All function arguments in Rust are required to have an associated type.
+</p>
+
+<h5 class="subsubsection-heading">Syntax & Semantics</h5>
+
+<p>
+Types are specified by placing a colon after the local variable name, then the type name:
+</p>
+
+<code data-programming-language="rust"><pre>
+fn add_values(a: i32, b: i32) -> i32 {
+    a + b
+}
+</pre></code>
+
+<p>
+There are 2 reasons why the compiler might reject code due to the declared types.
+One reason is that the given values are explicitly incompatible.
+For example, if the user tries to pass literal strings when calling the above definition
+of <code>add_values</code>, the compiler will emit this error<span class="citation-indicator">
+	(rust-source)
+	<span class="citation">
+		compiler/rustc_hir_typeck/src/fn_ctxt/check.rs lines 791-793, 748-753<br/>
+		!!INCLUDE references/rust-source.html!!
+	</span>
+</span>:
+<p>
+
+<pre>
+error[E0308]: arguments to this function are incorrect
+ --> simple.rs:7:5
+  |
+7 |     add_values("1000", "1001");
+  |     ^^^^^^^^^^ ------  ------ expected `i32`, found `&str`
+  |                |
+  |                expected `i32`, found `&str`
+  |
+note: function defined here
+ --> simple.rs:1:4
+  |
+1 | fn add_values(a: i32, b: i32) -> i32 {
+  |    ^^^^^^^^^^ ------  ------
+
+error: aborting due to 1 previous error
+</pre>
+
+<p>
+The other reason for an error is that type inference fails.
+While local variables declared in the function signature must have an explicit type, local
+variables declared in the body of the function do not; in this case, there is still an
+associated type but this type is inferred by the compiler based on usage.
+However, the programmer might try to use the variables in such a way that no associated
+type will satisfy all of the usage constraints.
+For example, if we additionally define this function:
+</p>
+
+<code data-programming-language="rust"><pre>
+fn add_unsigned_values(a: u32, b: u32) -> u32 {
+    a + b
+}
+</pre></code>
+
+<p>
+Then try to call both of them with the same variables:
+</p>
+
+<code data-programming-language="rust"><pre>
+fn main() {
+    let a = 1000;
+    let b = 1001;
+    add_values(a, b);
+    add_unsigned_values(a, b);
+}
+</pre></code>
+
+<p>
+The compiler will first infer that <code>a</code> and <code>b</code> must be of type
+<code>i32</code> based on the first call<span class="citation-indicator">
+	(rust-source)
+	<span class="citation">
+		compiler/rustc_hir_typeck/src/fn_ctxt/check.rs lines 313-319<br/>
+		!!INCLUDE references/rust-source.html!!
+	</span>
+</span>,
+then finds an incompatibility in the second call<span class="citation-indicator">
+	(rust-source)
+	<span class="citation">
+		compiler/rustc_hir_typeck/src/fn_ctxt/check.rs lines 791-793, 748-753<br/>
+		!!INCLUDE references/rust-source.html!!
+	</span>
+</span>:
+</p>
+
+<pre>
+error[E0308]: arguments to this function are incorrect
+  --> typed-value-error.rs:13:5
+   |
+13 |     add_unsigned_values(a, b);
+   |     ^^^^^^^^^^^^^^^^^^^ -  - expected `u32`, found `i32`
+   |                         |
+   |                         expected `u32`, found `i32`
+   |
+note: function defined here
+  --> typed-value-error.rs:5:4
+   |
+5  | fn add_unsigned_values(a: u32, b: u32) -> u32 {
+   |    ^^^^^^^^^^^^^^^^^^^ ------  ------
+help: you can convert an `i32` to a `u32` and panic if the converted value doesn't fit
+   |
+13 |     add_unsigned_values(a.try_into().unwrap(), b);
+   |                          ++++++++++++++++++++
+help: you can convert an `i32` to a `u32` and panic if the converted value doesn't fit
+   |
+13 |     add_unsigned_values(a, b.try_into().unwrap());
+   |                             ++++++++++++++++++++
+</pre>
+
+The compiler emits an error if the values at the calling site are not compatible with the
+declared type
+<span class="citation-indicator">
+	(rust-source)
+	<span class="citation">
+		compiler/rustc_hir_typeck/src/fn_ctxt/check.rs lines 1158-1174<br/>
+		!!INCLUDE references/rust-source.html!!
+	</span>
+</span>.
+</p>
+
+<h5 class="subsubsection-heading">Implementation</h5>
+
+<p>
+The generated assembly accesses memory under the assumption that the given values and/or
+pointers contain the expected data layout.
+While this means that the generated assembly will be different if the types in use are
+changed, there is no type-checking logic to examine in the final output.
+</p>
+
 <h4 class="subsection-heading" id="state-of-rust-author-destructuring">Author Destructing</h4>
 
 <p>
-In Rust both tuples and structs can be destructured by the author.
+In Rust both tuples and structs can be destructured<span class="footnote-indicator">*
+	<span class="footnote">
+		Technically enums can be destructured in function signatures as well, but the pattern
+		must be irrefutable - meaning that only enums with a single variant can be
+		destructured.
+	</span>
+</span>
+by the author.
 </p>
 
 <h5 class="subsubsection-heading">Syntax & Semantics</h5>
