@@ -140,6 +140,14 @@ The simple function and call use positional arguments; there are no additional f
 examine here.
 </p>
 
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+Rust used positional arguments since the pre-RFC era.
+Systems programming languages typically use positional arguments, as evidenced by the
+assumption in the System V ABI assumption that all arguments are positional.
+</p>
+
 <h4 class="subsection-heading" id="state-of-rust-default-value">Default Value</h4>
 
 <p>
@@ -287,6 +295,13 @@ While this means that the generated assembly will be different if the types in u
 changed, there is no type-checking logic to examine in the final output.
 </p>
 
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+Rust has required types on local variables declared in function signatures since the
+pre-RFC era.
+</p>
+
 <h4 class="subsection-heading" id="state-of-rust-caller-destructuring">Caller Destructuring</h4>
 
 <p>
@@ -353,7 +368,7 @@ fn add_values_struct(arguments: &Arguments) -> i32 {
     arguments.a + arguments.b
 }
 
-fn add_values_struct_destructured(Arguments { a, b }: &Arguments) -> i32 {
+fn add_values_struct_destructured(Arguments { a: a, b: b }: &Arguments) -> i32 {
     a + b
 }
 </pre></code>
@@ -440,6 +455,54 @@ The discrepency is a reasonable literal translation of destructuring into assemb
 instead of dereferencing the pointer inline, the second part of the pattern is moved into
 the second positional register and a helper function which takes 2 (theoretically
 unrelated) positional arguments is called.
+</p>
+
+<h5 class="subsubsection-heading">Historical Record</h5>
+
+<p>
+Pattern-matching has been available in Rust since the pre-RFC era.
+However, it has evolved in the RFC era.
+</p>
+
+<p>
+RFC 1492 allows the construct <code>..</code> to appear alongside variable names in
+destructured tuples.
+This has the effect of ignoring unspecified members: previously, <code>..</code> could
+only be used to ignore all members in a tuple
+<span class="citation-indicator">
+	(RFC 1492)
+	<span class="citation">
+		text/1492-dotdot-in-patterns.md<br/>
+		!!INCLUDE references/rust-rfcs.html!!
+	</span>
+</span>.
+</p>
+
+<p>
+RFC 1682 extends the syntax of patterns for sturcts such that a plain variable name can be
+used when the local variable name is identical to the member variable name
+<span class="citation-indicator">
+	(RFC 1682)
+	<span class="citation">
+		text/1682-field-init-shorthand.md<br/>
+		!!INCLUDE references/rust-rfcs.html!!
+	</span>
+</span>.
+For example, the previous definition of <code>add_values_struct_destructured</code> could
+be shortened to:
+</p>
+
+<code data-programming-language="rust"><pre>
+fn add_values_struct_destructured(Arguments { a, b }: &Arguments) -> i32 {
+    a + b
+}
+</pre></code>
+
+<p>
+There have been other changes to patterns through the RFC process, however they are not
+relevant here due to the requirement that patterns in function signatures are irrefutable.
+For example, there have been changes to conditional guards on patterns which can be
+refuted when the condition evaluates to <code>false</code>.
 </p>
 
 <h4 class="subsection-heading" id="state-of-rust-variadic-function">Variadic Function</h4>
