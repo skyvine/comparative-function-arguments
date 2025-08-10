@@ -13,7 +13,7 @@ Rust provides the following features:
 <h4 class="subsection-heading" id="state-of-rust-background">Background</h4>
 <p>
 Rust has a compiler which produces native code.
-It does not have a stable ABI and does creating one is not considered desirable by the
+It does not have a stable ABI and creating one is not considered desirable by the
 Rust developers
 <span class="citation-indicator">
 	(#600)
@@ -25,8 +25,8 @@ When targeting Linux, the compiler appears to produce code that follows the Syst
 </p>
 
 <p>
-Assembly code uses Intel-style syntax, for ease of use with the Intel Software Developer
-Manual.
+This paper uses Intel-style assembly syntax, for ease of use with the Intel Software
+Developer Manual.
 </p>
 
 <h4 class="subsection-heading" id="state-of-rust-simple-function-and-call">Simple Function and Call</h4>
@@ -74,7 +74,7 @@ the return value of function calls
 		!!INCLUDE references/system-v-abi-specification.html!!
 	</span>
 </span>.
-Next, it adds the give arguments directly in the registers used to pass them and moves the
+Next, it adds the given arguments directly in the registers used to pass them and moves the
 result onto the stack using <code>rsp</code>, which conventionally contains the stack
 pointer
 <span class="citation-indicator">
@@ -260,17 +260,6 @@ help: you can convert an `i32` to a `u32` and panic if the converted value doesn
    |                             ++++++++++++++++++++
 </pre>
 
-The compiler emits an error if the values at the calling site are not compatible with the
-declared type
-<span class="citation-indicator">
-	(rust-source)
-	<span class="citation">
-		compiler/rustc_hir_typeck/src/fn_ctxt/check.rs lines 1158-1174<br/>
-		!!INCLUDE references/rust-source.html!!
-	</span>
-</span>.
-</p>
-
 <h5 class="subsubsection-heading">Implementation</h5>
 
 <p>
@@ -361,10 +350,11 @@ call   79f0 <_ZN20author_destructuring30add_values_struct_destructured17hfb47877
 </pre>
 
 <p>
-However, the bodies of the functions differ slightly<span class="footnote-indicator">*
+However, the bodies of the functions differ<span class="footnote-indicator">*
 	<span class="footnote">
-		The bodies are practically identical when comparing the tuple definitions to the
-		struct definitions.
+		While the bodies of the destructured functions differ from their non-destructured
+		counterparts, the differences between a destructured tuple and destructured struct are
+		negligible.
 	</span>
 </span>
 when destructuring is used.
