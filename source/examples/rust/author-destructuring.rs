@@ -19,9 +19,26 @@ fn add_values_struct_destructured(Arguments { a, b }: &Arguments) -> i32 {
     a + b
 }
 
+fn add_values_tuple_too_many_destructured((a, b, ..): &(i32, i32, i32)) -> i32 {
+    a + b
+}
+
+struct TooManyArguments {
+    a: i32,
+    b: i32,
+    #[allow(dead_code)]
+    c: i32,
+}
+
+fn add_values_struct_too_many_destructured(TooManyArguments { a, b, .. }: &TooManyArguments) -> i32 {
+    a + b
+}
+
 fn main() {
     add_values_tuple(&(1000, 1001));
     add_values_tuple_destructured(&(1000, 1001));
     add_values_struct(&Arguments { a: 1000, b: 1001 });
     add_values_struct_destructured(&Arguments { a: 1000, b: 1001 });
+    add_values_tuple_too_many_destructured(&(1000, 1001, 1002));
+    add_values_struct_too_many_destructured(&TooManyArguments { a: 1000, b: 1001, c: 1002 });
 }

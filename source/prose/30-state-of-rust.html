@@ -348,6 +348,29 @@ In the case of structs, the right side of the inner colons represents the name o
 local variable while the left side represents the name of the member in the struct.
 </p>
 
+<p>
+Additionally, the author can choose to ignore some members of an input when destructuring.
+They do this by specifying only the elements that they want to match and placing a literal
+<code>..</code> to indicate that other elements should be ignored:
+
+<code data-programming-language="rust"><pre>
+fn add_values_tuple_too_many_destructured((a, b, ..): &(i32, i32, i32)) -> i32 {
+    a + b
+}
+
+struct TooManyArguments {
+    a: i32,
+    b: i32,
+    #[allow(dead_code)]
+    c: i32,
+}
+
+fn add_values_struct_too_many_destructured(TooManyArguments { a, b, .. }: &TooManyArguments) -> i32 {
+    a + b
+}
+</pre></code>
+
+
 <h5 class="subsubsection-heading">Implementation</h5>
 
 <p>
@@ -455,6 +478,11 @@ The discrepency is a reasonable literal translation of destructuring into assemb
 instead of dereferencing the pointer inline, the second part of the pattern is moved into
 the second positional register and a helper function which takes 2 (theoretically
 unrelated) positional arguments is called.
+</p>
+
+<p>
+The assembly for the bodies of destructuring functions that ignore some elements is
+identical to the above assembly; ignored values are literally ignored.
 </p>
 
 <h5 class="subsubsection-heading">Historical Record</h5>
