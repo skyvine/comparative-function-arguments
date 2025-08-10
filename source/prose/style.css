@@ -2,6 +2,11 @@
 	font-style: italic;
 }
 
+span.footnote-indicator,
+span.citation-indicator {
+	font-style: italic
+}
+
 span.footnote-indicator > span.footnote,
 span.citation-indicator > span.citation {
 	display:    none;
